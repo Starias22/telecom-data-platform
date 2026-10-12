@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import date
 
 
-from config.config import TELECOM_CREATION_DATE, NULL, DATA_GENERATOR_OUTPUT_DIR, ID_COL, SUBSCRIPTIONS_RECORDS_FILE, REGISTRATION_DATE_COL, TERMINATION_DATE_COL, SEED, PHONE_NUMBER_COL, STATUS_COL, ACTIVE, RECHARGE_TRANSACTIONS_DIR, OFFER_CONFIG_ID_COL, PURCHASED_AT_COL, OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH, VALIDITY_DAYS_COL, SUBSCRIPTION_ID_COL
+from config.config import TELECOM_CREATION_DATE, NULL, DATA_GENERATOR_OUTPUT_DIR, ID_COL, SUBSCRIPTIONS_RECORDS_FILE, REGISTRATION_DATE_COL, TERMINATION_DATE_COL, SEED, PHONE_NUMBER_COL, STATUS_COL, ACTIVE, RECHARGE_TRANSACTIONS_DIR, OFFER_CONFIG_ID_COL, PURCHASED_AT_COL, OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH, VALIDITY_DAYS_COL, SUBSCRIPTION_ID_COL, START_DATE_COL, END_DATE_COL
 
 RECHARGE_TRANSACTIONS_DIR = Path(RECHARGE_TRANSACTIONS_DIR)
 
@@ -30,7 +30,7 @@ rng = np.random.default_rng(SEED)
 TODAY = date.today().strftime("%Y-%m-%d")
 DAILY_PURCHASE_RATE = 0.15
 
-offer_configs_df = pd.read_csv(OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH)
+offer_configs_df = pd.read_csv(OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH, parse_dates=[START_DATE_COL, END_DATE_COL])
 
 
 subscriptions_df = pd.read_csv(SUBSCRIPTIONS_RECORDS_FILE, parse_dates=[REGISTRATION_DATE_COL, TERMINATION_DATE_COL])
@@ -38,7 +38,8 @@ print(subscriptions_df[REGISTRATION_DATE_COL].dtype)
 print(subscriptions_df[TERMINATION_DATE_COL].dtype)
 
 
-RECHARGE_TRANSACTIONS_DIR.mkdir(exist_ok=True)
+RECHARGE_TRANSACTIONS_DIR.mkdir()
+# RECHARGE_TRANSACTIONS_DIR.mkdir(exist_ok=True)
 
 
 
@@ -87,9 +88,6 @@ for current_date in tqdm(operational_dates):
         
         
         active_subscriptions_df = subscriptions_df.loc[active_subscriptions_mask]
-        """if len(active_subscriptions_df) >= 10:
-                print(active_subscriptions_df[[ID_COL, REGISTRATION_DATE_COL]].sort_values(ID_COL))
-                exit()"""
 
         print(active_subscriptions_mask.sum())
         
@@ -110,16 +108,9 @@ for current_date in tqdm(operational_dates):
        
         purchases_df = active_subscriptions_df.loc[active_subscriptions_df.index.repeat(purchases_counts)]
         
-        
 
-        
-        
         
         purchases_df.rename(columns={ID_COL:SUBSCRIPTION_ID_COL}, inplace = True)
-        # purchases_df[SUBSCRIPTION_ID_COL] = purchases_df.index + 1
-
-        
-        
         
         
         # Generate a random time (in seconds) for each purchase of this day
@@ -127,7 +118,6 @@ for current_date in tqdm(operational_dates):
                                       24 * 60 * 60, 
                                       size = len(purchases_df)
                                 
-
         )
         purchases_df[PURCHASED_AT_COL] = (
                 current_date + pd.to_timedelta(random_num_seconds, unit="seconds")
@@ -144,7 +134,8 @@ for current_date in tqdm(operational_dates):
                 size=len(purchases_df),
                 p=list(PURCHASE_CHANNEL_PROBABILITIES.values())
         )
-        purchases_df[OFFER_CONFIG_ID_COL] = rng.integers(1, len(offer_configs_df)+1, size=len(purchases_df))
+        current_offer_configs_df = offer_configs_df[(offer_configs_df[START_DATE_COL] <=current_date) & (offer_configs_df[END_DATE_COL] >= current_date)]
+        purchases_df[OFFER_CONFIG_ID_COL] = rng.choice(current_offer_configs_df[ID_COL].unique(), size=len(purchases_df))
         # Sort by time
         purchases_df.sort_values(PURCHASED_AT_COL, inplace=True)
         
@@ -152,7 +143,7 @@ for current_date in tqdm(operational_dates):
 
         
 
-        invalid_mask = (
+        """invalid_mask = (
                 purchases_df[PURCHASED_AT_COL].dt.normalize()
                 < purchases_df[REGISTRATION_DATE_COL].dt.normalize()
         )
@@ -170,8 +161,8 @@ for current_date in tqdm(operational_dates):
                 # exit()
                 
                 raise ValueError(
-                        f"{invalid_mask.sum()} achats anyterieurs a la date danregistrement++++++++++"
-                )
+                        f"{invalid_mask.sum()} achats anyterieurs a la date danregistrement++++++++++
+                )"""
                 
         # Keep only needed columns
         purchases_df = purchases_df[
