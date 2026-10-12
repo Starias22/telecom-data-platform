@@ -1,43 +1,20 @@
 import json
 import os
 from pathlib import Path
-import sys
 import numpy as np
 import pandas as pd
 import shutil
 
-
-from config.config import SEED, CUSTOMER_RECORDS_FILE, CUSTOMER_SEGMENT_COL,NULL, SUBSCRIPTION_ID_COL, CITY_COL, PHONE_NUMBER_COL, SUBSCRIPTIONS_RECORDS_FILE, DATA_GENERATOR_OUTPUT_DIR, TIMESTAMP_MILLISECONDS_COL, SMS_COUNT_COL, DATA_MB_COL, CALL_SECONDS_COL, PURCHASE_ID_COL, SERVICE_TYPE_COL, get_purchase_details, VALUE_MB_COL, VALUE_XOF_COL, XOF_PER_MB_COL, XOF_PER_SEC_COL, XOF_PER_SMS_COL, TYPE_COL, BUNDLE, MOBILE, CUSTOMER_RECORDS_SOURCES_FILE, SUBSCRIPTIONS_RECORDS_SOURCES_FILE, SOURCES_DIR, RECHARGE_TRANSACTIONS_DIR, OFFERS_CATALOG_DIR, REGISTRATION_DATE_COL, SUBSCRIPTIONS_DIR
+from config.paths import CUSTOMER_RECORDS_FILE, DATA_GENERATOR_OUTPUT_DIR, SUBSCRIPTIONS_RECORDS_FILE, CUSTOMER_RECORDS_SOURCES_FILE, SUBSCRIPTIONS_RECORDS_SOURCES_FILE, OFFERS_CATALOG_DIR, RECHARGE_TRANSACTIONS_DIR, DATA_SOURCES_DIR, PURCHASES_SOURCES_DIR, OFFERS_CATALOG_SOURCES_DIR, TELECOM_SERVICES_USAGE_SOURCES_FILE
+from config.column_names import CITY_COL, CUSTOMER_SEGMENT_COL, PHONE_NUMBER_COL, DATA_MB_COL, CALL_SECONDS_COL, SMS_COUNT_COL, PURCHASE_ID_COL, TYPE_COL, VALUE_MB_COL, XOF_PER_SEC_COL, VALUE_XOF_COL, XOF_PER_SMS_COL, SERVICE_TYPE_COL, TIMESTAMP_MILLISECONDS_COL, SUBSCRIPTION_ID_COL
+from config.categorical_constants import BUNDLE, MOBILE
+from config.utils import inject_typo, get_purchase_details
+from config.config import SEED, NULL
 
 
 # Intentionaly inject some data quality issues
+
 rng = np.random.default_rng(SEED)
-
-def inject_typo(value):
-        
-        DELETE = "delete"
-        DUPLICATE = "duplicate"
-        SWAP = "swap"
-        # !!! Later add neighbors typo (entree dun charactere voisin)
-        TYPO_TYPES = [
-                DELETE, DUPLICATE, SWAP
-        ]
-
-
-        if len(value) < 4:
-                return value
-        type_type = rng.choice(TYPO_TYPES)
-        chars = list(value)
-        if type_type == DELETE:
-                pos = rng.integers(1, len(chars) -1)
-                del chars[pos]
-        elif type_type == DUPLICATE:
-                pos = rng.integers(1, len(chars) -1)
-                chars.insert(pos, chars[pos])
-        elif type_type == SWAP:
-                pos = rng.integers(1, len(chars) -2)
-                chars[pos], chars[pos + 1] = chars[pos + 1], chars[pos]
-        return "".join(chars)
 
 ## 1. Customers (segment, city)
 customers_df = pd.read_csv(CUSTOMER_RECORDS_FILE)
@@ -73,7 +50,7 @@ customer_city_typo_rate = 0.3 / 100
 count = int(n * customer_city_typo_rate)
 print(f"{(customer_city_typo_rate * 100):.2f} % of typo for customer cities ({count} records)")
 indexes = rng.choice(customers_df.index, size=count, replace=False)
-customers_df.loc[indexes, CITY_COL] = customers_df.loc[indexes, CITY_COL].apply(lambda city: inject_typo(city))
+customers_df.loc[indexes, CITY_COL] = customers_df.loc[indexes, CITY_COL].apply(lambda city: inject_typo(city, rng=rng))
 print(customers_df.iloc[indexes])
 
 # 2. Subscriptions
@@ -158,14 +135,16 @@ usage_by_purchase.loc[maxi_mask, "total_maxi_usage_cost_xof"] = (
 )
 
 print(usage_by_purchase)
-usage_by_purchase = usage_by_purchase[[PURCHASE_ID_COL, VALUE_MB_COL, "total_data_usage_mb", VALUE_XOF_COL, "total_maxi_usage_cost_xof"]]
+total_data_usage_mb = "total_data_usage_mb"
+total_maxi_usage_cost_xof = "total_maxi_usage_cost_xof"
+usage_by_purchase = usage_by_purchase[[PURCHASE_ID_COL, VALUE_MB_COL, total_data_usage_mb, VALUE_XOF_COL, total_maxi_usage_cost_xof]]
 
 
 print(usage_by_purchase)
 
 x = usage_by_purchase.loc[
-        (usage_by_purchase["total_data_usage_mb"] > usage_by_purchase[VALUE_MB_COL]) |  
-        (usage_by_purchase["total_maxi_usage_cost_xof"] > usage_by_purchase[VALUE_XOF_COL])]
+        (usage_by_purchase[total_data_usage_mb] > usage_by_purchase[VALUE_MB_COL]) |  
+        (usage_by_purchase[total_maxi_usage_cost_xof] > usage_by_purchase[VALUE_XOF_COL])]
 print(x)
 
 print(len(x))
@@ -204,7 +183,7 @@ print(usage_df)
 
 # Save fles for source systems
 
-os.makedirs(SOURCES_DIR, exist_ok=True)
+os.makedirs(DATA_SOURCES_DIR, exist_ok=True)
 
 customers_df.to_csv(CUSTOMER_RECORDS_SOURCES_FILE, index=False)
 
@@ -239,16 +218,15 @@ usage_records = [
         {k:v for k, v in record.items() if pd.notna(v)} for record in usage_records
 ]
 
-file = Path(SOURCES_DIR) / "usage.json"
-
+file = TELECOM_SERVICES_USAGE_SOURCES_FILE
 
 with open(file, "w") as file:
         for record in usage_records:
                 file.write(json.dumps(record) + "\n")
          
 
-shutil.copytree(RECHARGE_TRANSACTIONS_DIR, Path(SOURCES_DIR) / "purchases", dirs_exist_ok=True)
-shutil.copytree(OFFERS_CATALOG_DIR, Path(SOURCES_DIR) / "offers_catalog", dirs_exist_ok=True)
+shutil.copytree(RECHARGE_TRANSACTIONS_DIR, PURCHASES_SOURCES_DIR, dirs_exist_ok=True)
+shutil.copytree(OFFERS_CATALOG_DIR, OFFERS_CATALOG_SOURCES_DIR, dirs_exist_ok=True)
 
 print("Data quality issues injected successfully")
 

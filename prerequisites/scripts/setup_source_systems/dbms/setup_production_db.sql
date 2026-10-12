@@ -1,3 +1,4 @@
+
 CREATE DATABASE ben_telecom;
 
 \connect ben_telecom;

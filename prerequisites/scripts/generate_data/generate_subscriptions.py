@@ -1,32 +1,28 @@
 from datetime import date
-from pathlib import Path
-import sys
-from dateutil.relativedelta import relativedelta
 import os
 import numpy as np
 import pandas as pd
 
+from config.paths import CUSTOMER_RECORDS_FILE, DATA_GENERATOR_OUTPUT_DIR, SUBSCRIPTIONS_RECORDS_FILE
+from config.column_names import STATUS_COL, TERMINATION_DATE_COL, REGISTRATION_DATE_COL, ID_COL, CUSTOMER_ID_COL, PHONE_NUMBER_COL, CUSTOMER_REGISTRATION_DATE_COL
+from config.categorical_constants import TERMINATED
+from config.config import SEED, NUM_CUSTOMERS, SUBSCRIPTION_STATUS_PROBABILITIES, TELECOM_PHONE_NUMBER_PREFIXES, SUBSCRIPTIONS_COUNT_PROBABILITIES
 
-from config.config import SEED, PHONE_NUMBER_COL, STATUS_COL, REGISTRATION_DATE_COL, TERMINATION_DATE_COL, ACTIVE, INACTIVE, SUSPENDED, TERMINATED, ID_COL, SUBSCRIPTION_STATUS_PROBABILITIES, NUM_CUSTOMERS, CUSTOMER_RECORDS_FILE, DATA_GENERATOR_OUTPUT_DIR, SUBSCRIPTIONS_RECORDS_FILE, CUSTOMER_ID_COL
-
-
-phone_number = "32619691"
-
-PHONE_NUMBER_PREFIX_SETTING_DATE = "2025-01-01" # ?? Search on Google and change later
 
 rng = np.random.default_rng(SEED)
 
 
-subsription_counts = rng.choice(
-        [1, 2, 3, 4, 5], p=[0.85, 0.12, 0.025, 0.004, 0.001], size=NUM_CUSTOMERS)
 
-subsriptions_num = sum(subsription_counts)
-print(subsription_counts)
+subscription_counts = rng.choice(
+        list(SUBSCRIPTIONS_COUNT_PROBABILITIES.keys()), p=list(SUBSCRIPTIONS_COUNT_PROBABILITIES.values()), size=NUM_CUSTOMERS)
+
+subsriptions_num = sum(subscription_counts)
+print(subscription_counts)
 print(f"Total Number of subscriptions: {subsriptions_num}")
 customer_ids = np.arange(1, NUM_CUSTOMERS + 1)
 print(customer_ids)
 
-subscription_customer_ids = np.repeat(customer_ids, subsription_counts)
+subscription_customer_ids = np.repeat(customer_ids, subscription_counts)
 
 # Shuffle
 rng.shuffle(subscription_customer_ids)
@@ -34,16 +30,13 @@ print(subscription_customer_ids)
 
 assert len(subscription_customer_ids) == subsriptions_num
 
-
-telecom_prefixes = [30, 32, 34, 36, 38, 70, 72, 74]  # Les prefixes de numeros de loperateur telecom
 phone_numbers_pool = []
-for prefix in telecom_prefixes:
+for prefix in TELECOM_PHONE_NUMBER_PREFIXES:
         start = int(str(prefix) + 6*"0")
         end = int(str(prefix) + 6*"9")+1 # In order to include the last one
         phone_numbers_pool.extend(np.arange(start, end))
         
-
-assert len(phone_numbers_pool) == len(telecom_prefixes) * (10**6)
+assert len(phone_numbers_pool) == len(TELECOM_PHONE_NUMBER_PREFIXES) * (10**6)
 print(phone_numbers_pool[-1])
 
 phone_numbers =rng.choice(phone_numbers_pool, size=subsriptions_num, replace=False)
@@ -58,14 +51,13 @@ subsriptions_df[STATUS_COL] = rng.choice(list(SUBSCRIPTION_STATUS_PROBABILITIES.
 
 TODAY = date.today()
 
-CUSTOMER_REGISTRATION_DATE_COL = "customer_registration_date"
+
 
 customers_df = pd.read_csv(CUSTOMER_RECORDS_FILE, usecols=[ID_COL, REGISTRATION_DATE_COL]).rename(columns={REGISTRATION_DATE_COL:CUSTOMER_REGISTRATION_DATE_COL})
 print(customers_df)
 
 subsriptions_df = subsriptions_df.merge(customers_df, left_on=CUSTOMER_ID_COL, right_on=ID_COL)
 print(subsriptions_df)
-
 
 
 # Subscription registration date

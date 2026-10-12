@@ -1,93 +1,24 @@
-from pathlib import Path
-import pandas as pd
-from glob import glob
-
-
-CUSTOMER_ID_COL = "customer_id"
+from config.categorical_constants import INDIVIDUAL, BUSINESS, STANDARD, YOUTH, PREMIUM, SME, ACTIVE, INACTIVE, SUSPENDED, TERMINATED, USSD, MOBILE_APP, WEB, DEALDER, AIRTIME, MOBILE_MONEY
 
 NULL = None
-TELECOM_CREATION_DATE = "2020-05-18"
-NUM_CUSTOMERS = 5_000_000
-ID_COL = "id"
-GENDER_COL = "gender"
-BIRTHDATE_COL = "birthdate"
-PHONE_NUMBER_COL = "phone_number"
-CITY_COL = "city"
-CUSTOMER_TYPE_COL = "customer_type"
-CUSTOMER_SEGMENT_COL =  "customer_segment"
-
-
-TYPE_COL = "type"
-
-MOBILE = "MOBILE"
-BUNDLE = "BUNDLE"
-DATA = "DATA"
-
-VALUE_XOF_COL = "value_xof"
-VALUE_MB_COL = "value_mb"
-
-XOF_PER_SEC_COL = "xof_per_sec"
-XOF_PER_SMS_COL = "xof_per_sms"
-XOF_PER_MB_COL = "xof_per_mb"
-IS_LIMITLESS_COL = "is_limitless"
-
-
-SUBSCRIPTION_ID_COL = "subscription_id"
-
-REGISTRATION_DATE_COL = "registration_date"
-TERMINATION_DATE_COL = "termination_date"
-
-STATUS_COL = "status"
-OFFER_ID_COL = "offer_id"
-BILLING_ID_COL = "billing_id"
-START_DATE_COL = "start_date"
-END_DATE_COL = "end_date"
-OFFER_CONFIG_ID_COL = "offer_config_id"
-PURCHASED_AT_COL = "purchased_at"
-VALIDITY_DAYS_COL = "validity_days"
-
-
-
-
-ACTIVE =  "ACTIVE"
-INACTIVE = "INACTIVE"
-SUSPENDED = "SUSPENDED"
-TERMINATED = "TERMINATED"
-
-
-
-MALE = "M"
-FEMALE = "F"
-
-
-DATA_GENERATOR_OUTPUT_DIR = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/clean/"
-CUSTOMER_RECORDS_FILE = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/clean/customers.csv"
-SUBSCRIPTIONS_RECORDS_FILE = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/clean/subscriptions.csv"
-
-CUSTOMER_RECORDS_SOURCES_FILE = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/customers.csv"
-SUBSCRIPTIONS_RECORDS_SOURCES_FILE = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/subscriptions.csv"
-
-SOURCES_DIR = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/"
-
 SEED = 0
 
-BUSINESS = "BUSINESS"
+KAFKA_TOPIC = "TelecomUsage"
+KAFKA_SERVERS = "localhost:9092"
 
-INDIVIDUAL = "INDIVIDUAL"
-SME = "SME"
-# CORPORATE = "CORPORATE"
+NUM_CUSTOMERS = 5_000_000
+TELECOM_CREATION_DATE = "2020-05-18"
+
+MIN_BIRTHDATE = "1900-01-01"
+
+CALL = "CALL"
+SMS = "SMS"
+DATA = "DATA"
 
 CUSTOMER_TYPE_PROBABILITIES ={
         INDIVIDUAL:0.90,
         BUSINESS:0.10
 }
-
-
-
-STANDARD = "STANDARD"
-YOUTH = "YOUTH"
-PREMIUM = "PREMIUM"
-SME = "SME"
 
 CUSTOMER_SEGMENT_PROBABILITIES ={
         INDIVIDUAL: {
@@ -101,9 +32,6 @@ CUSTOMER_SEGMENT_PROBABILITIES ={
         }
 
 }
-
-
-
 
 CITY_PROBABILITIES = {
     "Cotonou": 0.25,
@@ -138,14 +66,6 @@ CITY_PROBABILITIES = {
     "Tchaourou": 0.01
 }
 
-"""def str_to_date_object(date_str:str)-> date:
-        year, month, day_num = [int(i) for i in date_str.split("-")]
-        return date(year=year, month=month, day=day_num)
-
-def str_format_date(date_object:date) -> str:
-        return date_object.strftime("%Y-%m-%d")"""
-
-
 CUSTOMER_STATUS_PROBABILITIES = {
 
 ACTIVE:0.90,
@@ -161,101 +81,18 @@ INACTIVE:0.05,
 TERMINATED:0.03
 }
 CUSTOMERS_MIN_AGE = 15
-
-RECHARGE_TRANSACTIONS_DIR = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/clean/purchases"
-
-OFFERS_CATALOG_DIR = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/clean/offers_catalog/"
-OFFER_RECORDS_CSV_FILE_PATH = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/clean/offers_catalog/offers.csv"
-
-BILLING_RECORDS_CSV_FILE_PATH = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/clean/offers_catalog/offer_billings.csv"
-OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/clean/offers_catalog/offer_configurations.csv"
-
-SUBSCRIPTIONS_DIR = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/subscriptions/"
+TELECOM_PHONE_NUMBER_PREFIXES = [30, 32, 34, 36, 38, 70, 72, 74]  # Les prefixes de numeros de loperateur telecom
 
 
-TIMESTAMP_MILLISECONDS_COL = "timestamp"
+PURCHASE_CHANNEL_PROBABILITIES = {USSD:0.55, MOBILE_APP: 0.25, WEB: 0.05, DEALDER:0.15}
 
-DATA_USAGE_COL = "data_usage"
-CALLS_USAGE_COL = "calls_usage"
-SMS_USAGE_COL = "sms_usage"
-PURCHASE_ID_COL = "purchase_id"
+PAYMENT_METHOD_PROBABILITIES = {MOBILE_MONEY: 0.75, AIRTIME:0.25}
 
-DATA_MB_COL = "data_mb"
-SMS_COUNT_COL = "sms_count"
-CALL_SECONDS_COL = "call_seconds"
+SUBSCRIPTIONS_COUNT_PROBABILITIES = {
+        1:0.85,
+        2:0.12,
+        3:0.025,
+        4:0.004,
+        5:0.001
+        }
 
-SERVICE_TYPE_COL = "service_type"
-CALL = "CALL"
-SMS = "SMS"
-
-def get_purchase_details():
-
-        recharge_transaction_files = glob(f"{RECHARGE_TRANSACTIONS_DIR}/*")
-
-        offers_df = pd.read_csv(OFFER_RECORDS_CSV_FILE_PATH)
-
-        print(offers_df)
-
-        billings_df = pd.read_csv(BILLING_RECORDS_CSV_FILE_PATH)
-        offer_configs_df = pd.read_csv(OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH)
-
-        offer_configs_df = offer_configs_df.merge(offers_df, left_on=OFFER_ID_COL, right_on=ID_COL)
-
-
-        print(offer_configs_df)
-
-
-        print(offer_configs_df)
-        print(offer_configs_df.columns)
-        print(offer_configs_df.index)
-        billings_df.index +=1
-        print(billings_df)
-
-        offer_configs_df = offer_configs_df.join(billings_df, how='left', on=BILLING_ID_COL, lsuffix='_x', rsuffix='_y')
-        offer_configs_df.index += 1
-        print(offer_configs_df)
-        print(offer_configs_df.columns)
-
-
-        # drop OFFER_ID_COL BILLING_ID_COL 'id'(billing id) 'id_y'(offer id) 'name' 
-        offer_configs_df.drop(columns=[OFFER_ID_COL, BILLING_ID_COL, ID_COL, f"{ID_COL}_y", f"{START_DATE_COL}_y", f"{END_DATE_COL}_y"], inplace=True)
-        # Rename id_x to id(config id)
-        offer_configs_df.rename(columns={f"{ID_COL}_x": ID_COL}, inplace=True)
-
-        print(offer_configs_df)
-        print(offer_configs_df.columns)
-
-
-
-
-        # purchases_df = pd.concat([pd.read_csv(file, parse_dates=[PURCHASED_AT_COL]) for file in  recharge_transaction_files ])
-        purchases_df = pd.concat([pd.read_parquet(file) for file in  recharge_transaction_files ])
-
-        print(purchases_df)
-        
-
-        purchases_df = pd.merge(purchases_df, offer_configs_df, left_on=OFFER_CONFIG_ID_COL, right_on=ID_COL).drop(columns=OFFER_CONFIG_ID_COL).rename(columns = {f"{ID_COL}_x":PURCHASE_ID_COL})
-
-
-        print(purchases_df)
-        print(purchases_df.columns)
-
-        purchases_df = purchases_df[
-                [
-                PURCHASE_ID_COL,
-                SUBSCRIPTION_ID_COL,
-                PURCHASED_AT_COL,
-                VALUE_XOF_COL,
-                VALUE_MB_COL,
-                TYPE_COL,
-                VALIDITY_DAYS_COL,
-                IS_LIMITLESS_COL,
-                XOF_PER_SEC_COL,
-                XOF_PER_SMS_COL,
-                XOF_PER_MB_COL
-                ]
-                ]
-        print(purchases_df)
-        
-        
-        return purchases_df

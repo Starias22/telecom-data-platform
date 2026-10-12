@@ -1,16 +1,14 @@
-import os
-from pathlib import Path
-from glob import glob
 import pandas as pd
 import numpy as np
 import json
 
-
-
-from config.config import RECHARGE_TRANSACTIONS_DIR, BILLING_RECORDS_CSV_FILE_PATH, OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH, OFFER_ID_COL, ID_COL, BILLING_ID_COL, START_DATE_COL, END_DATE_COL,  OFFER_CONFIG_ID_COL, PURCHASED_AT_COL, VALIDITY_DAYS_COL, SEED, TYPE_COL, DATA, VALUE_XOF_COL, VALUE_MB_COL, OFFER_RECORDS_CSV_FILE_PATH, BUNDLE, MOBILE, XOF_PER_SEC_COL, XOF_PER_SMS_COL, XOF_PER_MB_COL, SUBSCRIPTION_ID_COL, DATA_GENERATOR_OUTPUT_DIR, IS_LIMITLESS_COL, CUSTOMER_RECORDS_FILE, PHONE_NUMBER_COL, CUSTOMER_ID_COL, SUBSCRIPTIONS_RECORDS_FILE, TIMESTAMP_MILLISECONDS_COL, DATA_USAGE_COL, CALLS_USAGE_COL, SMS_USAGE_COL, PURCHASE_ID_COL, SMS_COUNT_COL, DATA_MB_COL, CALL_SECONDS_COL, SERVICE_TYPE_COL, CALL, SMS, get_purchase_details
+from config.paths import SUBSCRIPTIONS_RECORDS_FILE, TELECOM_SERVICES_USAGE_FILE
+from config.column_names import ID_COL, CUSTOMER_ID_COL, PHONE_NUMBER_COL, VALIDITY_DAYS_COL, PURCHASED_AT_COL, TYPE_COL, DATA_MB_COL, DATA_USAGE_COL, CALL_SECONDS_COL, CALLS_USAGE_COL, SMS_COUNT_COL, SMS_USAGE_COL, XOF_PER_SMS_COL, VALUE_MB_COL, VALUE_XOF_COL, SERVICE_TYPE_COL, XOF_PER_MB_COL, XOF_PER_SEC_COL, TIMESTAMP_MILLISECONDS_COL, SUBSCRIPTION_ID_COL, PURCHASE_ID_COL
+from config.categorical_constants import BUNDLE, MOBILE, BUNDLE, DATA
+from config.utils import get_purchase_details
+from config.config import SEED, SMS, CALL
 
 rng = np.random.default_rng(SEED)
-
 
 
 purchases_df = get_purchase_details()
@@ -238,8 +236,8 @@ usage_records = [
         {k:v for k, v in record.items() if pd.notna(v)} for record in usage_records
 ]
 
-file = Path(DATA_GENERATOR_OUTPUT_DIR) / "usage.json"
 
-with open(file, "w") as file:
+
+with open(TELECOM_SERVICES_USAGE_FILE, "w") as file:
         for record in usage_records:
                 file.write(json.dumps(record) + "\n")

@@ -1,0 +1,40 @@
+
+MOBILE = "MOBILE"
+BUNDLE = "BUNDLE"
+DATA = "DATA"
+
+
+ACTIVE =  "ACTIVE"
+INACTIVE = "INACTIVE"
+SUSPENDED = "SUSPENDED"
+TERMINATED = "TERMINATED"
+
+MALE = "M"
+FEMALE = "F"
+
+BUSINESS = "BUSINESS"
+INDIVIDUAL = "INDIVIDUAL"
+SME = "SME"
+
+STANDARD = "STANDARD"
+YOUTH = "YOUTH"
+PREMIUM = "PREMIUM"
+SME = "SME"
+
+# Purchase channels
+USSD = "USSD"
+MOBILE_APP = "MOBILE_APP"
+WEB = "WEB"
+DEALDER = "DEALER"
+
+# Payment methods
+AIRTIME = "AIRTIME"
+MOBILE_MONEY = "MOBILE_MONEY"
+
+DELETE = "delete"
+DUPLICATE = "duplicate"
+SWAP = "swap"
+# !!! Later add neighbors typo (entree dun charactere voisin)
+TYPO_TYPES = [
+                DELETE, DUPLICATE, SWAP
+        ]
