@@ -51,3 +51,8 @@ PURCHASE_CHANNEL_COL = "purchase_channel"
 PAYMENT_METHOD_COL = "payment_method"
 CUSTOMER_REGISTRATION_DATE_COL = "customer_registration_date"
 
+CREATED_AT_COL = "created_at"
+
+UPDATED_AT_COL = "updated_at"
+
+

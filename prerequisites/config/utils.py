@@ -35,7 +35,6 @@ def get_purchase_details():
 
         offer_configs_df = offer_configs_df.merge(offers_df, left_on=OFFER_ID_COL, right_on=ID_COL)
 
-
         print(offer_configs_df)
 
 

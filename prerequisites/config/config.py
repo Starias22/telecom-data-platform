@@ -96,3 +96,5 @@ SUBSCRIPTIONS_COUNT_PROBABILITIES = {
         5:0.001
         }
 
+HOST = "localhost"
+USER = "starias22"
