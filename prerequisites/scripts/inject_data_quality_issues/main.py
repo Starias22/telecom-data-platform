@@ -6,30 +6,31 @@ import pandas as pd
 import shutil
 
 from config.paths import CUSTOMER_RECORDS_FILE, DATA_GENERATOR_OUTPUT_DIR, SUBSCRIPTIONS_RECORDS_FILE, CUSTOMER_RECORDS_SOURCES_FILE, SUBSCRIPTIONS_RECORDS_SOURCES_FILE, OFFERS_CATALOG_DIR, RECHARGE_TRANSACTIONS_DIR, DATA_SOURCES_DIR, PURCHASES_SOURCES_DIR, OFFERS_CATALOG_SOURCES_DIR, TELECOM_SERVICES_USAGE_SOURCES_FILE
-from config.column_names import CITY_COL, CUSTOMER_SEGMENT_COL, PHONE_NUMBER_COL, DATA_MB_COL, CALL_SECONDS_COL, SMS_COUNT_COL, PURCHASE_ID_COL, TYPE_COL, VALUE_MB_COL, XOF_PER_SEC_COL, VALUE_XOF_COL, XOF_PER_SMS_COL, SERVICE_TYPE_COL, TIMESTAMP_MILLISECONDS_COL, SUBSCRIPTION_ID_COL
+from config.column_names import CITY_COL, CUSTOMER_TYPE_COL, PHONE_NUMBER_COL, DATA_MB_COL, CALL_SECONDS_COL, SMS_COUNT_COL, PURCHASE_ID_COL, TYPE_COL, VALUE_MB_COL, XOF_PER_SEC_COL, VALUE_XOF_COL, XOF_PER_SMS_COL, SERVICE_TYPE_COL, TIMESTAMP_MILLISECONDS_COL, SUBSCRIPTION_ID_COL
 from config.categorical_constants import BUNDLE, MOBILE
 from config.utils import inject_typo, get_purchase_details
 from config.config import SEED, NULL
+import subprocess
 
 
 def inject_issues():
         # Intentionaly inject some data quality issues
         rng = np.random.default_rng(SEED)
 
-        ## 1. Customers (segment, city)
+        ## 1. Customers (type, city)
         customers_df = pd.read_csv(CUSTOMER_RECORDS_FILE)
         n = len(customers_df)
 
-        ### Segments with NULLs and different formats
-        customer_segment_null_values_rate = 0.2 / 100
-        count = int(n * customer_segment_null_values_rate)
-        print(f"{(customer_segment_null_values_rate * 100):.2f} % of NULL values for customer segments ({count} records)")
+        ### Customer type NULLs
+        customer_type_null_values_rate = 0.2 / 100
+        count = int(n * customer_type_null_values_rate)
+        print(f"{(customer_type_null_values_rate * 100):.2f} % of NULL values for customer types ({count} records)")
         indexes = rng.choice(customers_df.index, size=count, replace=False)
-        customers_df.loc[indexes, CUSTOMER_SEGMENT_COL] = NULL
+        customers_df.loc[indexes, CUSTOMER_TYPE_COL] = NULL
         print(customers_df)
 
         ### City names 
-        #### in different formats: City names are mainly in capital case: injeet lower, upper, and capital cases for some customer records
+        #### in different formats: City names are mainly in capital case: inject lower, upper, and capital cases for some customer records
         customer_city_wrong_cases_rate = 0.5 / 100
         customer_city_wrong_cases_count = int(n * customer_city_wrong_cases_rate)
         print(f"{(customer_city_wrong_cases_rate * 100):.2f} % of wrong cases for customer cities ({customer_city_wrong_cases_count} records)")
@@ -88,73 +89,6 @@ def inject_issues():
         usage_df = pd.read_json(Path(DATA_GENERATOR_OUTPUT_DIR) / "usage.json", lines=True)
         n = len(usage_df)
         print(usage_df)
-        """
-        ## Offer usage > Offer purchase quota
-        greater_usage_rate = 0.02 / 100
-        count = int(n * greater_usage_rate)
-        print(f"{(greater_usage_rate * 100):.2f} % of usage records with total consommation > purchase quota for customer cities ({count} records)")
-        indexes = rng.choice(usage_df.index, size=count, replace=False)
-        factors = rng.integers(2, 5, size=count)
-        print(usage_df.iloc[indexes])
-        usage_df.loc[indexes, DATA_MB_COL] *= factors
-        usage_df.loc[indexes, CALL_SECONDS_COL] *= factors
-        usage_df.loc[indexes, SMS_COUNT_COL] *= factors
-        print(usage_df.iloc[indexes])
-        exceding_usage_purchase_ids = set(usage_df.loc[indexes, PURCHASE_ID_COL])
-        print(exceding_usage_purchase_ids)
-
-
-        print(usage_df.sort_values([PURCHASE_ID_COL, SERVICE_TYPE_COL, TIMESTAMP_MILLISECONDS_COL]))
-
-        usage_by_purchase = (usage_df.groupby(PURCHASE_ID_COL, as_index=False)
-                        .agg(
-                                total_data_usage_mb = (DATA_MB_COL, "sum"),
-                                total_sms_usage_count=(SMS_COUNT_COL, "sum"),
-                                total_call_usage_seconds=(CALL_SECONDS_COL, "sum")
-                        )
-                        )
-        print(usage_by_purchase)
-
-        purchases_df = get_purchase_details()
-
-        print(purchases_df)
-
-
-        usage_by_purchase = usage_by_purchase.merge(purchases_df, on=PURCHASE_ID_COL)
-
-        bundle_mask = purchases_df[TYPE_COL] == BUNDLE
-        mobile_mask = purchases_df[TYPE_COL] == MOBILE
-
-
-
-        maxi_mask = bundle_mask | mobile_mask
-        usage_by_purchase.loc[maxi_mask, "total_maxi_usage_cost_xof"] = (
-                usage_by_purchase.loc[maxi_mask, "total_sms_usage_count"] * usage_by_purchase.loc[maxi_mask, XOF_PER_SMS_COL] + 
-                usage_by_purchase.loc[maxi_mask, "total_call_usage_seconds"] * usage_by_purchase.loc[maxi_mask, XOF_PER_SEC_COL]
-                
-        )
-
-        print(usage_by_purchase)
-        total_data_usage_mb = "total_data_usage_mb"
-        total_maxi_usage_cost_xof = "total_maxi_usage_cost_xof"
-        usage_by_purchase = usage_by_purchase[[PURCHASE_ID_COL, VALUE_MB_COL, total_data_usage_mb, VALUE_XOF_COL, total_maxi_usage_cost_xof]]
-
-
-        print(usage_by_purchase)
-
-        x = usage_by_purchase.loc[
-                (usage_by_purchase[total_data_usage_mb] > usage_by_purchase[VALUE_MB_COL]) |  
-                (usage_by_purchase[total_maxi_usage_cost_xof] > usage_by_purchase[VALUE_XOF_COL])]
-        print(x)
-
-        print(len(x))
-        print(len(indexes))
-        percent = len(x) * 100 / n
-        print(len(usage_df))
-
-
-        print(f"Parmi les {len(indexes)} usages ciblés, seulement {len(x)} usages ont effectivement une consommation > au quota ({percent:.4f}% des usages)")
-        """
 
         ## Duplicate usage records
         duplicate_usage_rate =  0.10 / 100 
@@ -227,9 +161,24 @@ def inject_issues():
                         file.write(json.dumps(record) + "\n")
                 
 
-        shutil.copytree(RECHARGE_TRANSACTIONS_DIR, PURCHASES_SOURCES_DIR, dirs_exist_ok=True)
-        shutil.copytree(OFFERS_CATALOG_DIR, OFFERS_CATALOG_SOURCES_DIR, dirs_exist_ok=True)
+        #shutil.copytree(RECHARGE_TRANSACTIONS_DIR, PURCHASES_SOURCES_DIR, dirs_exist_ok=True)
+        #shutil.copytree(OFFERS_CATALOG_DIR, OFFERS_CATALOG_SOURCES_DIR, dirs_exist_ok=True)
+        subprocess.run([
+                "rm", 
+                "-rf", PURCHASES_SOURCES_DIR
+                
+                ]) # Remove the directory
+        subprocess.run([
+                "rm", 
+                "-rf", OFFERS_CATALOG_SOURCES_DIR
+                
+                ]) # Remove the directory
+
+        shutil.copytree(RECHARGE_TRANSACTIONS_DIR, PURCHASES_SOURCES_DIR)
+        shutil.copytree(OFFERS_CATALOG_DIR, OFFERS_CATALOG_SOURCES_DIR)
 
         print("Data quality issues injected successfully")
 
 
+if __name__ == "__main__":
+        inject_issues()
