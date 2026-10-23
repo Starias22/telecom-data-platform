@@ -8,10 +8,13 @@ from config.column_names import STATUS_COL, TERMINATION_DATE_COL, REGISTRATION_D
 from config.categorical_constants import TERMINATED
 from config.config import SEED, NUM_CUSTOMERS, SUBSCRIPTION_STATUS_PROBABILITIES, TELECOM_PHONE_NUMBER_PREFIXES, SUBSCRIPTIONS_COUNT_PROBABILITIES
 
-UPDATED_AT = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-print(UPDATED_AT)
+
 
 def generate_subscriptions():
+        now = datetime.now()
+        UPDATED_AT = now.strftime("%Y-%m-%d %H:%M:%S")
+        TODAY = now.date()
+
         rng = np.random.default_rng(SEED)
 
         subscription_counts = rng.choice(
@@ -63,27 +66,27 @@ def generate_subscriptions():
 
         # Subscription registration date
         mins_subscription_registration_date = pd.to_datetime(subsriptions_df[CUSTOMER_REGISTRATION_DATE_COL])
-        max_subscription_registration_date = pd.Timestamp(TODAY)
+        max_subscription_registration_date = pd.Timestamp(now)
         subscription_registration_days_range_max_day = (max_subscription_registration_date - mins_subscription_registration_date).dt.days
         print(subscription_registration_days_range_max_day)
 
         subscription_registration_dates = mins_subscription_registration_date + pd.to_timedelta(
-        rng.integers(0, (max_subscription_registration_date - mins_subscription_registration_date).dt.days +1, size=subsriptions_num), unit="days")
+        rng.integers(0, (max_subscription_registration_date - mins_subscription_registration_date).dt.seconds + 1, size=subsriptions_num), unit="seconds")
         print(subscription_registration_dates)
-        subsriptions_df[REGISTRATION_DATE_COL] = subscription_registration_dates.dt.strftime("%Y-%m-%d")
+        subsriptions_df[REGISTRATION_DATE_COL] = subscription_registration_dates.dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
 
-        # Customer termination date
+        # Subscription termination date
         terminated_subscriptions_mask = subsriptions_df[STATUS_COL] == TERMINATED
         min_termination_dates = subscription_registration_dates[terminated_subscriptions_mask]
-        max_termination_date = pd.Timestamp(TODAY)
-        termination_dates = pd.Series(min_termination_dates +  pd.to_timedelta(rng.integers(0, (max_termination_date - min_termination_dates).dt.days +1), unit="days"))
-        subsriptions_df.loc[terminated_subscriptions_mask, TERMINATION_DATE_COL] = termination_dates.dt.strftime("%Y-%m-%d")
+        max_termination_date = pd.Timestamp(now)
+        termination_dates = pd.Series(min_termination_dates +  pd.to_timedelta(rng.integers(0, (max_termination_date - min_termination_dates).dt.seconds + 1), unit="seconds"))
+        subsriptions_df.loc[terminated_subscriptions_mask, TERMINATION_DATE_COL] = termination_dates.dt.strftime("%Y-%m-%d %H:%M:%S")
 
         # Unique ids
         subsriptions_df[ID_COL] = subsriptions_df.index + 1
-        subsriptions_df[UPDATED_AT_COL] = "2026-10-14" # Update it later, so that it will be random and timestemp
+        subsriptions_df[UPDATED_AT_COL] = UPDATED_AT # Update it later, so that it will be random and timestemp
 
         print(subsriptions_df)
         
@@ -96,6 +99,9 @@ def generate_subscriptions():
         print("Done")
 
 
+
+if __name__ == "__main__":
+        generate_subscriptions()
 
 
 

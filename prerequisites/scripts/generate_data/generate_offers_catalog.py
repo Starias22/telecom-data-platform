@@ -9,7 +9,7 @@ from config.categorical_constants import  MOBILE, DATA, BUNDLE
 from config.config import NULL, TELECOM_CREATION_DATE
 
 UPDATED_AT = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-print(UPDATED_AT)
+
 
 
 def generate_offers_catalog():
@@ -269,5 +269,7 @@ def generate_offers_catalog():
         offer_configs_df.to_csv(OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH, index=False)
 
 
+if __name__ == "__main__":
+        generate_offers_catalog()
 
 

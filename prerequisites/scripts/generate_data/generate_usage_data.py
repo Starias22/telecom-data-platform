@@ -7,6 +7,8 @@ from config.column_names import ID_COL, CUSTOMER_ID_COL, PHONE_NUMBER_COL, VALID
 from config.categorical_constants import BUNDLE, MOBILE, BUNDLE, DATA
 from config.utils import get_purchase_details
 from config.config import SEED, SMS, CALL
+import re
+
 
 def generate_service_usage_data():
         rng = np.random.default_rng(SEED)
@@ -196,6 +198,22 @@ def generate_service_usage_data():
 
         #print(usage_df[~usage_df[TERMINATION_DATE_COL].isna()])
         # Duration between termination date and purchased at
+        print(usage_df[TERMINATION_DATE_COL].dtype)
+        print(usage_df[TERMINATION_DATE_COL])
+
+        """mask = usage_df[TERMINATION_DATE_COL].dt.hour == 0 & (usage_df[TERMINATION_DATE_COL].dt.minute == 0)
+        
+        usage_df.loc[mask, TERMINATION_DATE_COL] = usage_df.loc[mask, TERMINATION_DATE_COL] + pd.Timedelta(hours=23, minutes=59)"""
+        print(usage_df[PURCHASED_AT_COL])
+        print(usage_df[TERMINATION_DATE_COL].dtype)
+        print(usage_df[PURCHASED_AT_COL].dtype)
+      
+        
+
+        
+        print(usage_df[usage_df[TERMINATION_DATE_COL] <=usage_df[PURCHASED_AT_COL]])
+        
+
         usage_period_before_termination_days = usage_df[TERMINATION_DATE_COL] - usage_df[PURCHASED_AT_COL]
         validity_period_days = pd.Series(pd.to_timedelta(usage_df[VALIDITY_DAYS_COL].to_numpy(), unit="days"))
 
@@ -208,12 +226,7 @@ def generate_service_usage_data():
 
         usage_period_seconds = usage_period_days.dt.total_seconds().astype(int)
         print(usage_period_seconds)
-
-        # usage_period_days = validity_period_days.where(validity_period_days <= usage_period_before_termination_days, usage_period_before_termination_days)
-
-        # usage_period_days = np.min(usage_period_before_termination_days, validity_period_days)
-
-
+        print(usage_period_seconds[usage_period_seconds <= 0])
 
         usage_offset_seconds = rng.integers(0, usage_period_seconds + 1)
 
@@ -261,3 +274,7 @@ def generate_service_usage_data():
         with open(TELECOM_SERVICES_USAGE_FILE, "w") as file:
                 for record in usage_records:
                         file.write(json.dumps(record) + "\n")
+
+if __name__ == "__main__":
+        generate_service_usage_data()
+

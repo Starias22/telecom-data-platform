@@ -24,7 +24,9 @@ def generate_purchases():
         print(subscriptions_df[TERMINATION_DATE_COL].dtype)
         
         if dir.exists():
+                print("Yes exists")
                 shutil.rmtree(dir)
+                # return
 
         dir.mkdir()
         print(subscriptions_df)
@@ -41,7 +43,6 @@ def generate_purchases():
         print(type(first_operational_date))
         print(type(last_operational_date))
 
-
         operational_dates = pd.date_range(
                 start=first_operational_date,
                 end=last_operational_date,
@@ -56,8 +57,7 @@ def generate_purchases():
         cpt = 1
         for current_date in tqdm(operational_dates):
                 print(current_date)
-                
-                
+                                
                 active_subscriptions_mask = (
                 ( subscriptions_df[REGISTRATION_DATE_COL] <= current_date) & 
                 (subscriptions_df[TERMINATION_DATE_COL].isna() | (subscriptions_df[TERMINATION_DATE_COL] >= current_date)
@@ -98,8 +98,7 @@ def generate_purchases():
                 )
                 purchases_df[PURCHASED_AT_COL] = (
                         current_date + pd.to_timedelta(random_num_seconds, unit="seconds")
-                )
-                
+                )                
                 
                 
                 purchases_df[PAYMENT_METHOD_COL] = rng.choice(
@@ -128,15 +127,12 @@ def generate_purchases():
                                 PURCHASE_CHANNEL_COL,
                                 PAYMENT_METHOD_COL
                         ]
-                ] 
-
-                
+                ]
 
                 print(purchases_df)
                 print("##########")
                 
                 file = dir / f"{current_date.strftime('%Y%m%d')}.parquet"
-                # file = RECHARGE_TRANSACTIONS_DIR / f"{current_date.strftime('%Y%m%d')}.csv"
                 purchases_df.to_parquet(file, index=False)
                 
                 cpt += len(purchases_df)
@@ -144,3 +140,6 @@ def generate_purchases():
                 if len(purchases_df) >= 1_000:
                         # print(purchases_df[[ID_COL, SUBSCRIPTION_ID_COL, PURCHASED_AT_COL, REGISTRATION_DATE_COL]])
                         return
+
+if __name__ == "__main__":
+        generate_purchases()
