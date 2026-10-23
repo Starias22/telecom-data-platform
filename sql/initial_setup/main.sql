@@ -1,10 +1,17 @@
 \ir 01_create_schemas.sql
-\ir 02_create_staging_tables.sql
-\ir 03_create_dq_tables.sql
-\ir 04_create_dw_tables.sql
-\ir 05_create_pipeline_metadata_tables.sql
+\ir 02_create_ref_tables.sql
+\ir 03_create_pipeline_metadata_tables.sql
+\ir 04_create_staging_tables.sql
+\ir 05_create_dq_tables.sql
+\ir 06_create_dw_tables.sql
 
+
+\dn;
+\dt ref.*;
+\dt pipeline_metadata.*;
 \dt staging.*
 \dt data_quality.*;
 \dt dw.*;
-\dt pipeline_metadata.*;
+
+-- \ir 07_check_data_quality.sql
+-- \ir 08_initial_load.sql

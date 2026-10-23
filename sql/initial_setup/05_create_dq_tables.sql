@@ -1,6 +1,6 @@
 CREATE TABLE data_quality.issues(
         issue_id SERIAL PRIMARY KEY, -- Big int generated always as identity primary key?
-        batch_id VARCHAR(25) NOT NULL,
+        batch_id INT NOT NULL,
         table_name VARCHAR(50) NOT NULL,
         column_name VARCHAR(50),
         record_id INT NOT NULL,

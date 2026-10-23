@@ -1,4 +1,3 @@
-
 CREATE TABLE dw.dim_date(
         date_key INT PRIMARY KEY,     
         full_date DATE NOT NULL,
@@ -17,12 +16,6 @@ CREATE TABLE dw.dim_date(
         year INT NOT NULL
 );
 
-CREATE TABLE dw.dim_geography(
-        geography_key SERIAL PRIMARY KEY,
-        city VARCHAR(50) NOT NULL,
-        department VARCHAR(50) NOT NULL
-);
-
 CREATE TABLE dw.dim_offer(
         offer_key SERIAL PRIMARY KEY, 
         offer_config_id INT NOT NULL,    
@@ -39,29 +32,26 @@ CREATE TABLE dw.dim_offer(
         xof_per_sms_sent NUMERIC CHECK(xof_per_sms_sent >= 0),
         xof_per_mb_used NUMERIC CHECK(xof_per_mb_used >= 0),
         offer_start_date TIMESTAMP,
-        offer_end_date TIMESTAMP,
-        valid_from DATE,
-        valid_to DATE DEFAULT '9999-12-31',
-        is_current BOOLEAN    
+        offer_end_date TIMESTAMP
 );
 
 CREATE TABLE dw.dim_customer(
         customer_key SERIAL PRIMARY KEY,   
         customer_id INT NOT NULL,
-        geography_key INT NOT NULL,
+        customer_city VARCHAR(25) NOT NULL,
+        customer_department VARCHAR(20) NOT NULL,
         customer_type VARCHAR(50) NOT NULL,
         customer_segment VARCHAR(50) NOT NULL,
         gender CHAR(1) CHECK (gender IN ('M', 'F')),
-        registration_date TIMESTAMP NOT NULL,
-        status TEXT,
+        registration_date DATE NOT NULL,
+        status VARCHAR(10),
         termination_date TIMESTAMP,
 
         /*Track History (SCD Type 2)*/
         valid_from DATE,
         valid_to DATE DEFAULT '9999-12-31',
-        is_current BOOLEAN,
-        FOREIGN KEY(geography_key) REFERENCES dw.dim_geography(geography_key) -- I prefred this (Snowflake schema) car sinon ça amenerait a faire de la redondance de commune ville [mais cette approche ci que jai utilisee moblige a faire plusieus JOIN avant de faire analuse geogrphiqu]
-);
+        is_current BOOLEAN
+        );
 
 CREATE TABLE dw.fact_purchase(
         purchase_id INT PRIMARY KEY,

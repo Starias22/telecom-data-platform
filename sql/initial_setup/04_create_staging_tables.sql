@@ -8,7 +8,8 @@ CREATE TABLE staging.offers(
         end_date TIMESTAMP,
         created_at TIMESTAMP,
         updated_at TIMESTAMP,
-        batch_id VARCHAR(15)
+        batch_id INT NOT NULL,
+        FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
          -- source_system VARCHAR (si les donnees de la tabe proviennent de sources differentes) (pareille pour les autres tables de staging)
 
 );
@@ -20,7 +21,8 @@ CREATE TABLE staging.offer_billings(
         xof_per_mb NUMERIC,
         created_at TIMESTAMP,
         updated_at TIMESTAMP,
-        batch_id VARCHAR(15)
+        batch_id INT NOT NULL,
+        FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
 CREATE TABLE staging.offer_configurations(
@@ -35,7 +37,8 @@ CREATE TABLE staging.offer_configurations(
         end_date TIMESTAMP,
         created_at TIMESTAMP,
         updated_at TIMESTAMP,
-        batch_id VARCHAR(15)
+        batch_id INT NOT NULL,
+        FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
 CREATE TABLE staging.customers(
@@ -49,7 +52,8 @@ CREATE TABLE staging.customers(
         status TEXT,
         termination_date TIMESTAMP,
         updated_at TIMESTAMP,
-        batch_id VARCHAR(15)
+        batch_id INT NOT NULL,
+        FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
 CREATE TABLE staging.subscriptions(
@@ -60,7 +64,8 @@ CREATE TABLE staging.subscriptions(
         status TEXT,
         termination_date TIMESTAMP,
         updated_at TIMESTAMP,
-        batch_id VARCHAR(15)
+        batch_id INT NOT NULL,
+        FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
 CREATE TABLE staging.purchases(
@@ -70,7 +75,8 @@ CREATE TABLE staging.purchases(
         purchased_at TIMESTAMP,
         purchase_channel TEXT,
         payment_method TEXT,
-        batch_id VARCHAR(15)
+        batch_id INT NOT NULL,
+        FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
 CREATE TABLE staging.services_usage(
@@ -84,6 +90,7 @@ CREATE TABLE staging.services_usage(
         call_seconds INT,
         message_partition SMALLINT NOT NULL, -- !!!Chercher le type de int approprie: sammll int?bigint?
         message_offset INT NOT NULL, -- !!!Chercher le type de int approprie: sammll int?bigint?
-        batch_id VARCHAR(15),
-        UNIQUE(message_partition, message_offset)
+        batch_id INT NOT NULL,
+        UNIQUE(message_partition, message_offset),
+        FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );

@@ -8,6 +8,7 @@ CREATE DATABASE ben_telecom_data_platform;
 \connect ben_telecom_data_platform;
 
 CREATE SCHEMA staging;
+CREATE SCHEMA ref;
 CREATE SCHEMA  data_quality;
 CREATE SCHEMA dw;
 CREATE SCHEMA pipeline_metadata;
