@@ -69,12 +69,6 @@ SUBSCRIPTIONS_TABLE = table_absolute_name(SUBSCRIPTIONS_SCHEMA, SUBSCRIPTIONS_TA
 PURCHASES_TABLE_NAME = "purchases"
 SERVICES_USAGE_TABLE_NAME = "services_usage"
 
-
-
-# PURCHASES_TABLE = table_absolute_name(SUBSCRIPTIONS_SCHEMA, SUBSCRIPTIONS_TABLE_NAME)
-
-
-
 def get_extraction_params(output_dir): # !!! Find a more convenent name
         return {
 
@@ -157,7 +151,7 @@ BATCH_LOGS_TABLE = f"{PIPELINE_METADATA_SCHEMA}.{BATCH_LOGS_TABLE_NAME}"
 BATCH_STATUS_COL = "status"
 RUNNING = "RUNNING"
 SUCCES = "SUCCESS"
-BATCH_NUM_COL = "batch_num"
+BATCH_ID_COL = "batch_id"
 STARTED_AT = "started_at"
 FINISHED_AT = "finished_at"
 
