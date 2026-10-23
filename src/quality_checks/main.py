@@ -1,0 +1,28 @@
+import os
+import subprocess
+
+from dotenv import load_dotenv
+
+from config.paths import SQL_INITIAL_SETUP_MAIN_FILE_PATH, ENV_FILE_PATH, SQL_QUALITY_CHECKS_FILE_PATH
+from config.config import HOST, DATA_PLATFORM_DB, USER
+
+# from src.run_pipeline import run_pipeline
+
+load_dotenv(ENV_FILE_PATH)
+env = os.environ.copy()
+
+def check_quality(batch_id=1):
+        subprocess.run(
+                [
+                        "psql",
+                        "-h", HOST,
+                        "-U", USER,
+                        "-d", DATA_PLATFORM_DB,
+                        "-f", SQL_QUALITY_CHECKS_FILE_PATH,
+                        "-v", f"batch_id={batch_id}"
+                ],
+                env=env
+        )
+        
+if __name__ ==  "__main__":
+        check_quality()
