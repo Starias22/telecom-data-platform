@@ -1,0 +1,176 @@
+-- dim_date (Already loaded initially)
+
+-- Dim offer (Je suppose SCD 1 donc en cas de changement juste updte): Je considere seuelemt le nom de loffre, sa date de debut et de fin, comme SCD1 et tous les autres attributs comme SCD 0 (vu que la source possede start date et end date, une nouvelle offre est creer lorsuqe les autres attributs changent) 
+-- 1. Mettre a jour le nom pour toutes les offres du DW dont le nom a change dans le batch courant
+UPDATE dw.dim_offer AS dof
+SET offer_name = o.name,
+    offer_start_date = oc.start_date,
+    offer_end_date = oc.end_date
+-- FROM staging.offer_configurations AS oc
+FROM current_batch_offer_configurations AS oc
+JOIN staging.offers AS o ON o.id = oc.offer_id -- Considerer tous les offres car il se peut que loffre concernee ne soit pas dans le batch doffre courant
+WHERE oc.id = dof.offer_config_id
+      AND (
+        o.name IS DISTINCT FROM dof.offer_name
+        OR oc.start_date IS DISTINCT FROM dof.offer_start_date
+        OR oc.end_date IS DISTINCT FROM dof.offer_end_date
+      );
+
+-- 2. Inserer les nouvelles offres (ceux qui ne sont pas dans le DW)
+INSERT INTO dw.dim_offer(offer_config_id, offer_id, offer_name, offer_type, offer_category, validity_days, is_limitless, price_xof, value_xof, value_mb, xof_per_call_second, xof_per_sms_sent, xof_per_mb_used, offer_start_date, offer_end_date)
+SELECT oc.id AS offer_config_id,  o.id AS offer_id, o.name AS offer_name, o.type AS offer_type,
+CASE
+WHEN o.name ILIKE '%libre%' THEN 'OPTION LIBRE'
+WHEN o.name ILIKE 'défaut' THEN 'OFFRE PAR DEFAUT'
+ELSE UPPER((STRING_TO_ARRAY( o.name , ' '))[2])
+END AS offer_category, 
+oc.validity_days, oc.is_limitless, o.price_xof, oc.value_xof, oc.value_mb, ob.xof_per_second AS xof_per_call_second, ob.xof_per_sms AS xof_per_sms_sent, ob.xof_per_mb AS xof_per_mb_used, oc.start_date AS offer_start_date, oc.end_date AS offer_end_date
+FROM current_batch_offer_configurations AS oc
+-- FROM staging.offer_configurations AS oc
+LEFT JOIN staging.offer_billings AS ob on ob.id = oc.billing_id -- Left JOIN to also consider offers without billing; Considerer tous les offres car il se peut que le billing concrne ne soit pas dans le batch couran
+JOIN staging.offers AS o ON o.id = oc.offer_id -- Considerer tous les offres car il se peut que loffre concernee ne soit pas dans le batch courant
+LEFT JOIN dw.dim_offer AS dof ON dof.offer_config_id = oc.id
+WHERE dof.offer_id IS NULL; -- Les clients qui ne sont pas dans le DW
+
+
+
+SELECT COUNT(*) FROM dw.dim_offer;
+SELECT COUNT(*) FROM current_batch_offer_configurations;
+
+-- Dim customer
+
+-- 1. Mettre a jour dans dim_customer les clients (avec toutes leurs versions) pour lesquels des attributs SCD 1 (gender, registration date et termination date) ont changé, avec leurs lignes correspondantes dans le staging
+UPDATE dw.dim_customer AS dc
+SET gender = c.gender 
+    registration_date = c.registration_date
+    termination_date = c.termination_date
+FROM current_batch_customers AS c
+WHERE c.id = dc.customer_id -- La ligne correspondante a la ligne courante dans le staging
+      AND ( -- Cibler uniquement les lignes dont certains attributs SCD1 ont effectivement changé
+            c.gender IS DISTINCT FROM dc.gender -- IS DISTINCT FROM permet  de gerer effectivement les NULL values
+            OR c.registration_date IS DISTINCT FROM dc.registration_date -- OR pour cibler les clients dont au moins un attribut SCD1 a changé
+            OR c.termination_date IS DISTINCT FROM dc.termination_date
+      );
+
+-- 2. Fermer toutes les versions courantes pour les clients dont des attributs SCD 2 (city, type, segment, status) ont changé
+UPDATE dw.dim_customer AS dc
+SET valid_to = CURRENT_TIMESTAMP
+    is_current = FALSE
+FROM current_batch_customers AS c
+WHERE c.id = dc.customer_id
+      AND (
+            c.city IS DISTINCT FROM dc.customer_city
+            OR c.customer_type IS DISTINCT FROM dc.customer_type
+            OR c.segment IS DISTINCT FROM dc.customer_segment
+            OR c.status IS DISTINCT FROM dc.status
+      );
+
+-- 3. Insérer les nouveaux clients ainsi que les nouvelles versions de clients (les clients du staging qui nont aucune version courante dans le DW)
+
+INSERT INTO dw.dim_customer(customer_id, customer_city, customer_department, customer_segment, customer_type, gender, registration_date, status, termination_date, valid_from, is_current)
+SELECT c.id AS customer_id,
+COALESCE(rc.city, 'Unkown ('|| c.city || ')') AS customer_city,
+COALESCE(rc.department, 'Unkown') AS customer_department,
+c.customer_segment,
+COALESCE(c.customer_type,
+        CASE
+        WHEN c.customer_segment = 'SME' THEN 'BUSINESS'
+        WHEN c.customer_segment IN ('STANDARD', 'YOUTH') THEN 'INDIVIDUAL'
+        ELSE 'Unkown'
+        END) AS customer_type,
+c.gender,
+c.registration_date,
+c.status,
+c.termination_date
+-- FROM staging.customers AS c
+FROM current_batch_customers AS c
+LEFT JOIN ref.cities AS rc ON rc.city = c.city -- LEFT JOIN pour ne pas perdre les clients dont la ville n'est pas dans ref.cities (notamment les clients de ville mal ecrites)
+LEFT JOIN dw.dim_customer AS dc -- LEFT JOIN pour ne pas perdre les nouveaux clients
+                                ON dc.customer_id = c.id
+                                AND dc.is_current = TRUE -- Pour faire correspondre les clients du staging avec leurs versions acuelles dans le dw
+WHERE dc.customer_id IS NULL; -- Les clients du staging qui nont aucune version courante dans le DW(ie les nouveaux clients et les anciens dont toutes leurs versions courantes vieent juste detre fermee via le UPDATE)
+
+
+
+SELECT COUNT(*) FROM dw.dim_customer;
+SELECT COUNT(*) FROM current_batch_customers;
+
+
+
+-- Fact purchase
+WITH purchase_details AS(
+SELECT p.id AS purchase_id, purchased_at::DATE AS purchase_date, customer_key, s.customer_id, dc.valid_from, dc.valid_to, offer_key, offer_id, price_xof AS revenue
+-- FROM staging.purchases AS p
+FROM current_batch_purchases AS p
+JOIN staging.subscriptions AS s ON s.id = p.subscription_id
+JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id
+                           AND p.purchased_at >= valid_from
+                           AND p.purchased_at < valid_to
+JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id -- 
+)
+INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_key, revenue)
+SELECT purchase_id, TO_CHAR(purchase_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_key, revenue FROM purchase_details AS pd
+WHERE NOT EXISTS (
+    SELECT 1 FROM dw.fact_purchase AS fp WHERE fp.purchase_id = pd.purchase_id
+);
+
+
+SELECT COUNT(*) FROM dw.fact_purchase;
+SELECT COUNT(*) FROM current_batch_purchases;
+
+
+-- Fact consumption
+WITH service_usage_records_deduplicated AS(
+    -- SELECT * FROM current_batch_services_usage AS su WHERE NOT EXISTS (
+    SELECT * FROM staging.services_usage AS su WHERE NOT EXISTS (
+        SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id
+    )   
+),
+service_usage AS (
+  SELECT su.*, timestamp::DATE AS consumption_date FROM service_usage_records_deduplicated AS su
+),
+consumption_details AS(
+SELECT su.id, purchase_id, timestamp::DATE AS consumption_date, customer_key, s.customer_id, dc.valid_from, dc.valid_to, offer_key, offer_id, call_seconds AS call_duration_seconds, sms_count AS sms_sent_count, data_mb AS data_used_mb
+FROM service_usage AS su
+JOIN staging.purchases AS p ON p.id = su.purchase_id
+JOIN staging.subscriptions AS s ON s.id = su.subscription_id
+JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id
+                              AND consumption_date >= valid_from AND consumption_date < valid_to
+JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id
+),
+customer_purchase_consumption_daily_events AS (
+SELECT purchase_id, TO_CHAR(consumption_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_key, call_duration_seconds, sms_sent_count, data_used_mb  FROM consumption_details
+),
+customer_purchase_consumption_daily_events_aggregated AS (
+SELECT purchase_id, date_key, customer_key, offer_key,
+SUM(call_duration_seconds) OVER(w) AS call_duration_seconds,
+SUM(sms_sent_count) OVER(w) AS sms_sent_count,
+SUM(data_used_mb) OVER(w) AS data_used_mb,
+ROW_NUMBER() OVER (w) AS rn
+FROM customer_purchase_consumption_daily_events
+WINDOW w AS (PARTITION BY purchase_id, date_key )
+)
+INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_key, call_duration_seconds, sms_sent_count, data_used_mb)
+SELECT purchase_id, date_key, customer_key, offer_key, call_duration_seconds, sms_sent_count, data_used_mb
+FROM customer_purchase_consumption_daily_events_aggregated AS ca
+WHERE rn = 1
+     AND NOT EXISTS(
+        SELECT 1 FROM dw.fact_consumption AS fc
+            WHERE fc.purchase_id = ca.purchase_id
+            AND fc.date_key = ca.date_key
+     );
+
+
+
+WITH service_usage_records_deduplicated AS(
+    SELECT * FROM current_batch_services_usage AS su WHERE NOT EXISTS (
+        SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id
+    )   
+),
+service_usage_records_aggregated AS(
+SELECT purchase_id, timestamp:: DATE AS date FROM service_usage_records_deduplicated GROUP BY purchase_id, date
+)
+
+SELECT COUNT(*) FROM dw.fact_consumption;
+SELECT COUNT(*) FROM service_usage_records_aggregated;
+
