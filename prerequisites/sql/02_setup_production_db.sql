@@ -54,7 +54,7 @@ CREATE TABLE crm.customers(
         customer_type VARCHAR(10),
         gender CHAR(1),
         customer_segment VARCHAR(10),
-        birthdate TIMESTAMP,
+        birthdate DATE,
         registration_date TIMESTAMP,
         status VARCHAR(10),
         termination_date TIMESTAMP,
@@ -110,9 +110,9 @@ GRANT data_engineer TO starias22;
 \dt crm.*;
 \dt subscriptions.*;
 
-SELECT * FROM offers_catalog.offer_configurations LIMIT 10;
+/*SELECT * FROM offers_catalog.offer_configurations LIMIT 10;
 SELECT * FROM crm.customers LIMIT 10;
-SELECT * FROM subscriptions.subscriptions LIMIT 10;
+SELECT * FROM subscriptions.subscriptions LIMIT 10;*/
 
 
 
