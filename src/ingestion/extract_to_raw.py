@@ -133,17 +133,6 @@ def extract_service_usage(output_dir, batch_id, output_file_name = "services_usa
 
         usage_df.to_csv(f"{output_dir}/{output_file_name}", index=False)
 
-# extract_from_database("2026-10-14", "1900-01-01", "2026-10-14", 100 )
-
-## extract_purchases("/home/starias/myprojects/telecom-offer-performance-analytics-platform/data/raw/2026-10-14", "100")
-
-# extract_service_usage("/home/starias/myprojects/telecom-offer-performance-analytics-platform/data/raw/2026-10-14")
-
-
-# # extract("/home/starias/myprojects/telecom-offer-performance-analytics-platform/data/raw/2026-10-14")
-
-
-
-if __name__ == "main":
+if __name__ == "__main__":
         # extract_purchases()
         pass
