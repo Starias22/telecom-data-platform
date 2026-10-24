@@ -98,79 +98,102 @@ SELECT COUNT(*) FROM current_batch_customers;
 
 
 -- Fact purchase
-WITH purchase_details AS(
-SELECT p.id AS purchase_id, purchased_at::DATE AS purchase_date, customer_key, s.customer_id, dc.valid_from, dc.valid_to, offer_key, offer_id, price_xof AS revenue
+INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_config_id, revenue)
+WITH x AS (SELECT
+    p.id AS purchase_id,
+    p.purchased_at,
+    dc.customer_key,
+    dof.offer_config_id,
+    price_xof AS revenue
 -- FROM staging.purchases AS p
 FROM current_batch_purchases AS p
-JOIN staging.subscriptions AS s ON s.id = p.subscription_id
-JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id
-                           AND p.purchased_at >= valid_from
-                           AND p.purchased_at < valid_to
-JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id -- 
+-- Now on veut le client qui a fait lacaht
+-- L'id de souscription se trouve dans l'achat donc on fait une jointure avec la souscription pour avoir l'id du customer ayant fait lachat
+JOIN staging.subscriptions AS s ON s.id = p.subscription_id -- Seulement les achats dont lid de la souscription est dans les souscritions
+JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id -- JOIN avec dim customer pour avoir la version de client qui a fait lacha; seulemt es souscriptions de custmer id exitant dans dimcustomer
+                            AND dc.valid_from <= p.purchased_at  -- Choisir la version de cleint ayant fait lachat, ie celle valide au moment ou lachat a ete effectue
+                            AND dc.valid_to > p.purchased_at
+JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id -- Seulemt les achats de config ud existant dans dimoffer
 )
-INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_key, revenue)
-SELECT purchase_id, TO_CHAR(purchase_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_key, revenue FROM purchase_details AS pd
-WHERE NOT EXISTS (
-    SELECT 1 FROM dw.fact_purchase AS fp WHERE fp.purchase_id = pd.purchase_id
-);
+SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, revenue FROM x;
+
+
+
 
 
 SELECT COUNT(*) FROM dw.fact_purchase;
 SELECT COUNT(*) FROM current_batch_purchases;
 
 
+CREATE TABLE dw.fact_consumption(
+        consumption_key SERIAL PRIMARY KEY,
+        purchase_id INT NOT NULL,
+        date_key INT NOT NULL,
+        customer_key INT NOT NULL,
+        offer_config_id INT NOT NULL,
+        call_duration_seconds INT,
+        sms_sent_count INT,
+        data_used_mb NUMERIC,
+        UNIQUE(purchase_id, date_key),
+        FOREIGN KEY(date_key) REFERENCES dw.dim_date(date_key),
+        FOREIGN KEY(customer_key) REFERENCES dw.dim_customer(customer_key),
+        FOREIGN KEY(offer_config_id) REFERENCES dw.dim_offer(offer_config_id),
+        CHECK (COALESCE(call_duration_seconds, sms_sent_count, data_used_mb) IS NOT NULL) -- Service parameters should not be all null
+);
+
 -- Fact consumption
-WITH service_usage_records_deduplicated AS(
-    -- SELECT * FROM current_batch_services_usage AS su WHERE NOT EXISTS (
-    SELECT * FROM staging.services_usage AS su WHERE NOT EXISTS (
-        SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id
-    )   
+INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
+WITH service_usage_deduplicated AS (
+SELECT * FROM staging.services_usage AS su
+-- SELECT * FROM current_batch_services_usage AS su
+WHERE NOT EXISTS(
+    SELECT 1 FROM data_quality.issues AS dqi WHERE table_name = 'services_usage'
+                                             AND issue_type = 'Uniqueness'
+                                             AND dqi.batch_id = su.batch_id
+                                             AND dqi.record_id = su.id
+
+                )
 ),
 service_usage AS (
-  SELECT su.*, timestamp::DATE AS consumption_date FROM service_usage_records_deduplicated AS su
+SELECT * , timestamp::DATE AS usage_date FROM service_usage_deduplicated
 ),
-consumption_details AS(
-SELECT su.id, purchase_id, timestamp::DATE AS consumption_date, customer_key, s.customer_id, dc.valid_from, dc.valid_to, offer_key, offer_id, call_seconds AS call_duration_seconds, sms_count AS sms_sent_count, data_mb AS data_used_mb
+consumption_daily_events AS(
+SELECT purchase_id, TO_CHAR(usage_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, call_seconds AS call_duration_seconds, sms_count AS sms_sent_count, data_mb AS data_used_mb
 FROM service_usage AS su
+JOIN staging.subscriptions AS s ON s.id = su.purchase_id
+JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id -- Pour avoir la version de client ayant consommé le service
+                            AND dc.valid_from <= usage_date
+                            AND dc.valid_to > usage_date
 JOIN staging.purchases AS p ON p.id = su.purchase_id
-JOIN staging.subscriptions AS s ON s.id = su.subscription_id
-JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id
-                              AND consumption_date >= valid_from AND consumption_date < valid_to
-JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id
 ),
-customer_purchase_consumption_daily_events AS (
-SELECT purchase_id, TO_CHAR(consumption_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_key, call_duration_seconds, sms_sent_count, data_used_mb  FROM consumption_details
-),
-customer_purchase_consumption_daily_events_aggregated AS (
-SELECT purchase_id, date_key, customer_key, offer_key,
+consumption_daily_events_agg_ranked AS(
+SELECT purchase_id, date_key, customer_key, offer_config_id,
 SUM(call_duration_seconds) OVER(w) AS call_duration_seconds,
 SUM(sms_sent_count) OVER(w) AS sms_sent_count,
 SUM(data_used_mb) OVER(w) AS data_used_mb,
 ROW_NUMBER() OVER (w) AS rn
-FROM customer_purchase_consumption_daily_events
-WINDOW w AS (PARTITION BY purchase_id, date_key )
+FROM consumption_daily_events
+WINDOW w AS (PARTITION BY purchase_id, date_key)
 )
-INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_key, call_duration_seconds, sms_sent_count, data_used_mb)
-SELECT purchase_id, date_key, customer_key, offer_key, call_duration_seconds, sms_sent_count, data_used_mb
-FROM customer_purchase_consumption_daily_events_aggregated AS ca
-WHERE rn = 1
-     AND NOT EXISTS(
-        SELECT 1 FROM dw.fact_consumption AS fc
-            WHERE fc.purchase_id = ca.purchase_id
-            AND fc.date_key = ca.date_key
-     );
+SELECT purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb
+FROM consumption_daily_events_agg_ranked
+WHERE rn = 1;
 
 
-
-WITH service_usage_records_deduplicated AS(
-    SELECT * FROM current_batch_services_usage AS su WHERE NOT EXISTS (
-        SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id
-    )   
+WITH service_usage_deduplicated AS(
+    SELECT * 
+    -- FROM current_batch_services_usage AS su
+    FROM staging.services_usage AS su
+    WHERE NOT EXISTS(
+                    SELECT 1 FROM data_quality.issues AS dqi WHERE table_name = 'services_usage'
+                                             AND issue_type = 'Uniqueness'
+                                             AND dqi.batch_id = su.batch_id
+                                             AND dqi.record_id = su.id)
 ),
-service_usage_records_aggregated AS(
-SELECT purchase_id, timestamp:: DATE AS date FROM service_usage_records_deduplicated GROUP BY purchase_id, date
+service_usage_aggregated AS(
+SELECT purchase_id, timestamp:: DATE AS usage_date FROM service_usage_deduplicated GROUP BY purchase_id, usage_date
 )
-
+SELECT COUNT(*) FROM service_usage_aggregated;
 SELECT COUNT(*) FROM dw.fact_consumption;
-SELECT COUNT(*) FROM service_usage_records_aggregated;
+
 
