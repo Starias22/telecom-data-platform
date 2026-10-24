@@ -33,10 +33,6 @@ LEFT JOIN dw.dim_offer AS dof ON dof.offer_config_id = oc.id
 WHERE dof.offer_id IS NULL; -- Les clients qui ne sont pas dans le DW
 
 
-
-SELECT COUNT(*) FROM dw.dim_offer;
-SELECT COUNT(*) FROM current_batch_offer_configurations;
-
 -- Dim customer
 
 -- 1. Mettre a jour dans dim_customer les clients (avec toutes leurs versions) pour lesquels des attributs SCD 1 (gender, registration date et termination date) ont changé, avec leurs lignes correspondantes dans le staging
@@ -91,12 +87,6 @@ LEFT JOIN dw.dim_customer AS dc -- LEFT JOIN pour ne pas perdre les nouveaux cli
 WHERE dc.customer_id IS NULL; -- Les clients du staging qui nont aucune version courante dans le DW(ie les nouveaux clients et les anciens dont toutes leurs versions courantes vieent juste detre fermee via le UPDATE)
 
 
-
-SELECT COUNT(*) FROM dw.dim_customer;
-SELECT COUNT(*) FROM current_batch_customers;
-
-
-
 -- Fact purchase
 INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_config_id, revenue)
 WITH x AS (SELECT
@@ -117,12 +107,6 @@ JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id -- Seulemt l
 )
 SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, revenue FROM x;
 
-
-
-
-
-SELECT COUNT(*) FROM dw.fact_purchase;
-SELECT COUNT(*) FROM current_batch_purchases;
 
 
 CREATE TABLE dw.fact_consumption(
@@ -178,22 +162,5 @@ WINDOW w AS (PARTITION BY purchase_id, date_key)
 SELECT purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb
 FROM consumption_daily_events_agg_ranked
 WHERE rn = 1;
-
-
-WITH service_usage_deduplicated AS(
-    SELECT * 
-    -- FROM current_batch_services_usage AS su
-    FROM staging.services_usage AS su
-    WHERE NOT EXISTS(
-                    SELECT 1 FROM data_quality.issues AS dqi WHERE table_name = 'services_usage'
-                                             AND issue_type = 'Uniqueness'
-                                             AND dqi.batch_id = su.batch_id
-                                             AND dqi.record_id = su.id)
-),
-service_usage_aggregated AS(
-SELECT purchase_id, timestamp:: DATE AS usage_date FROM service_usage_deduplicated GROUP BY purchase_id, usage_date
-)
-SELECT COUNT(*) FROM service_usage_aggregated;
-SELECT COUNT(*) FROM dw.fact_consumption;
 
 
