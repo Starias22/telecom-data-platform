@@ -1,4 +1,4 @@
-CREATE TABLE dw.dim_date(
+CREATE TABLE IF NOT EXISTS dw.dim_date(
         date_key INT PRIMARY KEY,     
         full_date DATE NOT NULL,
         formatted_date VARCHAR(10) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE dw.dim_date(
         year INT NOT NULL
 );
 
-CREATE TABLE dw.dim_offer(
+CREATE TABLE IF NOT EXISTS dw.dim_offer(
         offer_config_id INT PRIMARY KEY,    
         offer_id INT NOT NULL, -- not nessasary anymore?
         offer_name VARCHAR(50) NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE dw.dim_offer(
         offer_end_date TIMESTAMP
 );
 
-CREATE TABLE dw.dim_customer(
+CREATE TABLE IF NOT EXISTS dw.dim_customer(
         customer_key SERIAL PRIMARY KEY,   
         customer_id INT NOT NULL,
         customer_city VARCHAR(25) NOT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE dw.dim_customer(
         is_current BOOLEAN
         );
 
-CREATE TABLE dw.fact_purchase(
+CREATE TABLE IF NOT EXISTS dw.fact_purchase(
         purchase_id INT PRIMARY KEY, -- !!! Faut-il faire faire FK(purchase_id)  references staging.purchases(id)?
         date_key INT NOT NULL,
         customer_key INT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE dw.fact_purchase(
         FOREIGN KEY(offer_config_id) REFERENCES dw.dim_offer(offer_config_id)
 );
 
-CREATE TABLE dw.fact_consumption(
+CREATE TABLE IF NOT EXISTS dw.fact_consumption(
         consumption_key SERIAL PRIMARY KEY,
         purchase_id INT NOT NULL,
         date_key INT NOT NULL,

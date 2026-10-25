@@ -1,5 +1,5 @@
 -- !!!  Faut il assigner un  PK aux differentes tables du staging? (Je pense que non, quil faut ls laisser flexibles)
-CREATE TABLE staging.offers(
+CREATE TABLE IF NOT EXISTS staging.offers(
         id INT,
         name TEXT,
         type TEXT,
@@ -14,7 +14,7 @@ CREATE TABLE staging.offers(
 
 );
 
-CREATE TABLE staging.offer_billings(
+CREATE TABLE IF NOT EXISTS staging.offer_billings(
         id INT,
         xof_per_second NUMERIC,
         xof_per_sms NUMERIC,
@@ -25,7 +25,7 @@ CREATE TABLE staging.offer_billings(
         FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
-CREATE TABLE staging.offer_configurations(
+CREATE TABLE IF NOT EXISTS staging.offer_configurations(
         id INT,
         offer_id INT NOT NULL,
         value_xof INT,
@@ -41,7 +41,7 @@ CREATE TABLE staging.offer_configurations(
         FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
-CREATE TABLE staging.customers(
+CREATE TABLE IF NOT EXISTS staging.customers(
         id INT,
         city TEXT,
         customer_type TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE staging.customers(
         FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
-CREATE TABLE staging.subscriptions(
+CREATE TABLE IF NOT EXISTS staging.subscriptions(
         id INT,
         phone_number TEXT,
         customer_id INT,
@@ -68,7 +68,7 @@ CREATE TABLE staging.subscriptions(
         FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
-CREATE TABLE staging.purchases(
+CREATE TABLE IF NOT EXISTS staging.purchases(
         id INT,
         subscription_id INT,
         offer_config_id INT,
@@ -79,7 +79,7 @@ CREATE TABLE staging.purchases(
         FOREIGN KEY(batch_id) REFERENCES pipeline_metadata.batch_logs(batch_id)
 );
 
-CREATE TABLE staging.services_usage(
+CREATE TABLE IF NOT EXISTS staging.services_usage(
         id SERIAL PRIMARY KEY, -- possible to use (message_partition, message_offset) as PK? But i do this because I need to insert the id in the dataquality table
         purchase_id INT,
         subscription_id INT,

@@ -1,10 +1,16 @@
-CREATE TABLE pipeline_metadata.batch_logs(
+CREATE TABLE IF NOT EXISTS pipeline_metadata.batch_logs(
         batch_id SERIAL PRIMARY KEY, -- Bigint?
         started_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         finished_at TIMESTAMPTZ,
         status VARCHAR(10) CHECK (status IN ('RUNNING', 'SUCCESS','FAILED', 'INTERUPTED')),
         error_message TEXT
 
+);
+
+CREATE TABLE IF NOT EXISTS pipeline_metadata.watermarks(
+        source VARCHAR(10) PRIMARY KEY,
+        last_successful_watermark TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP--!!! Normal?
 );
 
 

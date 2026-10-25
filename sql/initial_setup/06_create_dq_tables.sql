@@ -1,4 +1,4 @@
-CREATE TABLE data_quality.issues(
+CREATE TABLE IF NOT EXISTS data_quality.issues(
         issue_id SERIAL PRIMARY KEY, -- Big int generated always as identity primary key?
         batch_id INT NOT NULL,
         table_name VARCHAR(50) NOT NULL,
