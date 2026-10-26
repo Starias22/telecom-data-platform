@@ -1,3 +1,33 @@
+CREATE TEMP TABLE current_batch_offers AS(
+SELECT * FROM staging.offers WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
+);
+
+CREATE TEMP TABLE current_batch_offer_billings AS(
+SELECT * FROM staging.offer_billings WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
+);
+
+
+CREATE TEMP TABLE current_batch_offer_configurations AS(
+SELECT * FROM staging.offer_configurations WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
+);
+
+CREATE TEMP TABLE current_batch_customers AS(
+SELECT * FROM staging.customers WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
+);
+
+
+CREATE TEMP TABLE current_batch_subscriptions AS(
+SELECT * FROM staging.subscriptions WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
+);
+
+CREATE TEMP TABLE current_batch_purchases AS(
+SELECT * FROM staging.purchases WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
+);
+
+CREATE TEMP TABLE current_batch_services_usage AS(
+SELECT * FROM staging.services_usage WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
+);
+
 -- dim_date (Already loaded initially)
 
 -- Dim offer (Je suppose SCD 1 donc en cas de changement juste updte): Je considere seuelemt le nom de loffre, sa date de debut et de fin, comme SCD1 et tous les autres attributs comme SCD 0 (vu que la source possede start date et end date, une nouvelle offre est creer lorsuqe les autres attributs changent) 
@@ -37,8 +67,8 @@ WHERE dof.offer_id IS NULL; -- Les clients qui ne sont pas dans le DW
 
 -- 1. Mettre a jour dans dim_customer les clients (avec toutes leurs versions) pour lesquels des attributs SCD 1 (gender, registration date et termination date) ont changé, avec leurs lignes correspondantes dans le staging
 UPDATE dw.dim_customer AS dc
-SET gender = c.gender 
-    registration_date = c.registration_date
+SET gender = c.gender, 
+    registration_date = c.registration_date,
     termination_date = c.termination_date
 FROM current_batch_customers AS c
 WHERE c.id = dc.customer_id -- La ligne correspondante a la ligne courante dans le staging
@@ -50,14 +80,14 @@ WHERE c.id = dc.customer_id -- La ligne correspondante a la ligne courante dans 
 
 -- 2. Fermer toutes les versions courantes pour les clients dont des attributs SCD 2 (city, type, segment, status) ont changé
 UPDATE dw.dim_customer AS dc
-SET valid_to = CURRENT_TIMESTAMP
+SET valid_to = CURRENT_TIMESTAMP,
     is_current = FALSE
 FROM current_batch_customers AS c
 WHERE c.id = dc.customer_id
       AND (
             c.city IS DISTINCT FROM dc.customer_city
             OR c.customer_type IS DISTINCT FROM dc.customer_type
-            OR c.segment IS DISTINCT FROM dc.customer_segment
+            OR c.customer_segment IS DISTINCT FROM dc.customer_segment
             OR c.status IS DISTINCT FROM dc.status
       );
 
@@ -77,7 +107,9 @@ COALESCE(c.customer_type,
 c.gender,
 c.registration_date,
 c.status,
-c.termination_date
+c.termination_date,
+CURRENT_TIMESTAMP as valid_from,
+TRUE as is_current
 -- FROM staging.customers AS c
 FROM current_batch_customers AS c
 LEFT JOIN ref.cities AS rc ON rc.city = c.city -- LEFT JOIN pour ne pas perdre les clients dont la ville n'est pas dans ref.cities (notamment les clients de ville mal ecrites)
@@ -107,23 +139,6 @@ JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id -- Seulemt l
 )
 SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, revenue FROM x;
 
-
-
-CREATE TABLE dw.fact_consumption(
-        consumption_key SERIAL PRIMARY KEY,
-        purchase_id INT NOT NULL,
-        date_key INT NOT NULL,
-        customer_key INT NOT NULL,
-        offer_config_id INT NOT NULL,
-        call_duration_seconds INT,
-        sms_sent_count INT,
-        data_used_mb NUMERIC,
-        UNIQUE(purchase_id, date_key),
-        FOREIGN KEY(date_key) REFERENCES dw.dim_date(date_key),
-        FOREIGN KEY(customer_key) REFERENCES dw.dim_customer(customer_key),
-        FOREIGN KEY(offer_config_id) REFERENCES dw.dim_offer(offer_config_id),
-        CHECK (COALESCE(call_duration_seconds, sms_sent_count, data_used_mb) IS NOT NULL) -- Service parameters should not be all null
-);
 
 -- Fact consumption
 INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
