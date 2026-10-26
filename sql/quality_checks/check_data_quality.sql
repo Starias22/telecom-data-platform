@@ -223,7 +223,7 @@ SELECT batch_id,  'services_usage', 'purchase_id', id, 'Referential Integrity', 
 SELECT batch_id,  'services_usage', 'subscription_id', id, 'Referential Integrity', 'SUBSCRIPTION_ID_NOT_IN_SUBSCRIPTIONS_TABLE', 'The subscription id is not available in subscriptions table' FROM current_batch_services_usage AS su WHERE NOT EXISTS(SELECT 1 FROM staging.subscriptions AS s WHERE  s.id = su.subscription_id);
 
 -- Summarize data quality issues
-SELECT DISTINCT issue_type, issue_code FROM data_quality.issues;
+SELECT DISTINCT issue_type, issue_code FROM data_quality.issues WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[]);
 
 -- !!!Queries to calculte count and statistics for each type/code of issue (the number of rows concerned)
 

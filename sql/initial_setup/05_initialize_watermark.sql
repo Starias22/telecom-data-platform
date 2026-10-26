@@ -1,0 +1,1 @@
+INSERT INTO pipeline_metadata.watermark(last_successful_watermark) VALUES ('1900-01-01');

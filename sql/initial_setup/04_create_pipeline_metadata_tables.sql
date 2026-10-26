@@ -7,10 +7,10 @@ CREATE TABLE IF NOT EXISTS pipeline_metadata.batch_logs(
 
 );
 
-CREATE TABLE IF NOT EXISTS pipeline_metadata.watermarks(
-        source VARCHAR(10) PRIMARY KEY,
-        last_successful_watermark TIMESTAMPTZ,
-        updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP--!!! Normal?
+CREATE TABLE IF NOT EXISTS pipeline_metadata.watermark(
+        -- source_name VARCHAR(20) PRIMARY KEY,
+        last_successful_watermark TIMESTAMPTZ NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP--!!! Normal?
 );
 
 

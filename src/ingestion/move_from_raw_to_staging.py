@@ -2,7 +2,6 @@ import subprocess
 
 from config.config import HOST, USER, get_staging_params, DATA_PLATFORM_DB
 
-
 def move_to_staging(staging_raw_data_dir):
 
         queries = []
