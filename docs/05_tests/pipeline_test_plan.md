@@ -2,7 +2,7 @@
 ID | Test | Expected Result | Status
 -----|----|------------------|-----------
 T01 | Platform Setup | All tables (staging, dw, dq, ref and pipeline batch logs and watermark tables) created successfully and potentially populated | Passed |
-T02 | Pipeline setup restart | Do not erase any database, table or data, but simply notify platform already setup | To be tested |
+T02 | Platform setup restart | Do not erase any database, table or data, but simply notify platform already setup | To be tested |
 T03 | Initial Pipeline | Full load successful for all dw tables, and initital metadata inserted or updated successfully | Passed |
 T04 | Initial Pipeline restart| No duplicate and no error, simply notify platform already initalized | To be tested |
 T05 | Incremental Execution without new data | No duplicates and no error (idempotency) | To be tested|
