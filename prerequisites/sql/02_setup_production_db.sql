@@ -72,6 +72,47 @@ CREATE TABLE subscriptions.subscriptions(
         FOREIGN KEY (customer_id) REFERENCES crm.customers(id)
 );
 
+CREATE OR REPLACE FUNCTION
+update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER
+trg_offers_updated_at
+BEFORE UPDATE ON offers_catalog.offers
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER
+trg_offer_billings_updated_at
+BEFORE UPDATE ON offers_catalog.offer_billings
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
+
+
+CREATE TRIGGER
+trg_offer_configurations_updated_at
+BEFORE UPDATE ON offers_catalog.offer_configurations
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
+
+
+
+CREATE TRIGGER
+trg_customers_updated_at
+BEFORE UPDATE ON crm.customers
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER
+trg_subscriptins_updated_at
+BEFORE UPDATE ON subscriptions.subscriptions
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at();
 
 
 /*-- Create a role for data engineers
