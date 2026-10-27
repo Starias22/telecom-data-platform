@@ -60,7 +60,7 @@ FROM current_batch_offer_configurations AS oc
 LEFT JOIN staging.offer_billings AS ob on ob.id = oc.billing_id -- Left JOIN to also consider offers without billing; Considerer tous les offres car il se peut que le billing concrne ne soit pas dans le batch couran
 JOIN staging.offers AS o ON o.id = oc.offer_id -- Considerer tous les offres car il se peut que loffre concernee ne soit pas dans le batch courant
 LEFT JOIN dw.dim_offer AS dof ON dof.offer_config_id = oc.id
-WHERE dof.offer_id IS NULL; -- Les clients qui ne sont pas dans le DW
+WHERE dof.offer_config_id IS NULL; -- Les offres qui ne sont pas dans le DW
 
 
 -- Dim customer

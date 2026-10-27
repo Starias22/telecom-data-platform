@@ -40,7 +40,7 @@ CREATE TABLE offers_catalog.offer_configurations(
         validity_days INT,
         billing_id INT, -- Nullable (Les forfaits internet n'ont pas de facturation)
         is_limitless BOOLEAN,
-        start_date TIMESTAMP,
+        start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         end_date TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

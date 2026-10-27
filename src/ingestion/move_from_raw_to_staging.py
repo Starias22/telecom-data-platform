@@ -31,13 +31,7 @@ def move_to_staging(staging_raw_data_dir):
         queries[-1] = x + columns_to_insert + y"""
 
        
-        i = STAGING_PARAMS["services_usage"]
-        table = i["table"]
-        file_path = i["file_path"]
         
-
-        temp_table = "tmp_service_usage"
-        columns = "purchase_id, subscription_id, timestamp, service_type, data_mb, sms_count, call_seconds, message_partition, message_offset, batch_id"
         
         
 
@@ -46,13 +40,21 @@ def move_to_staging(staging_raw_data_dir):
                 print("No data moved to staging cause no data extracted from any sources")
                 return
         
-        query = f"""
-        CREATE TEMP TABLE {temp_table} AS SELECT {columns} FROM {table} WITH NO DATA ;
-        \\copy {temp_table} FROM {file_path} WITH (FORMAT CSV, HEADER TRUE);
-        INSERT INTO {table} ({columns}) SELECT * FROM {temp_table} ON CONFLICT (message_partition, message_offset) DO NOTHING;
-        """
-        print(query)
-        queries[-1] = query # Replace last query
+        
+
+        i = STAGING_PARAMS["services_usage"]
+        table = i["table"]
+        file_path = i["file_path"]
+        if file_path.exists():
+                temp_table = "tmp_service_usage"
+                columns = "purchase_id, subscription_id, timestamp, service_type, data_mb, sms_count, call_seconds, message_partition, message_offset, batch_id"
+                query = f"""
+                CREATE TEMP TABLE {temp_table} AS SELECT {columns} FROM {table} WITH NO DATA ;
+                \\copy {temp_table} FROM {file_path} WITH (FORMAT CSV, HEADER TRUE);
+                INSERT INTO {table} ({columns}) SELECT * FROM {temp_table} ON CONFLICT (message_partition, message_offset) DO NOTHING;
+                """
+                print(query)
+                queries[-1] = query # Replace last query
 
         query = "\n".join(queries)
         # query = queries[-1]

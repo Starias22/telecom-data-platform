@@ -99,7 +99,7 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
             bootstrap_servers = KAFKA_SERVERS,
             enable_auto_commit=False,
             auto_offset_reset="earliest",
-            group_id = "batch-consumer-test-13", # !!! PLus tard Gerer cas ou les messages ont ete conomes mais une erreur faisant que ... k=jusqu la fin
+            group_id = "batch-consumer-test-16", # !!! PLus tard Gerer cas ou les messages ont ete conomes mais une erreur faisant que ... k=jusqu la fin
             consumer_timeout_ms = 5000
             )      
             message_records = []
