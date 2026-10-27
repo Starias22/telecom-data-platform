@@ -1,4 +1,4 @@
-from config.config import OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE
+from config.config import OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE,START_DATE_COL, END_DATE_COL
 from config.config import BUNDLE
 from  src.utils.db_connector import get_connection
 
@@ -40,9 +40,21 @@ def create_new_offer_config(connection, id=1000, offer_id=100, value_xof=3000, b
                         )
         connection.commit()
     
-    pass
 
-
+def update_offer_by_name(connection, old_name, new_name):
+    # Mettre un terme a cette offre (set end_date = curenttimsetemp)
+    query = f"""
+        UPDATE {OFFERS_TABLE}
+        SET {NAME_COL} = %s
+        WHERE {NAME_COL} = %s;
+        """
+    print(query)
+    with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (new_name, old_name) )
+        connection.commit()
+                        
+        
 def get_new_offer_created(connection, id):
       query = f"""
     SELECT * FROM {OFFERS_TABLE} WHERE id = {id};
@@ -63,7 +75,8 @@ def get_new_offer_config_created(connection, id):
             resultset = cursor.fetchone()
             print(pd.DataFrame(resultset))          
 
-def roll_back_to_original_state(connection, offer_config_id, offer_id):
+
+def roll_back_to_original_state_before_test_add_new_offer(connection, offer_config_id, offer_id):
       query = f"""
       DELETE FROM {OFFER_CONFIGS_TABLE} WHERE id = {offer_config_id};
       DELETE FROM {OFFERS_TABLE} WHERE id = {offer_id};
@@ -73,17 +86,61 @@ def roll_back_to_original_state(connection, offer_config_id, offer_id):
             cursor.execute(query)
             connection.commit()
 
-def test_add_new_offer():
+def roll_back_to_original_state_before_test_update_offer(connection, old_name, new_name):
+      query = f"""
+        UPDATE {OFFERS_TABLE}
+        SET {NAME_COL} = %s
+        WHERE {NAME_COL} = %s;
+        """
+      print(query)
+      with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (old_name, new_name) )
+        connection.commit()
+def test_add_new_offer(connection):
     offer_config_id = 1000
     offer_id = 100
-    roll_back_to_original_state(connection, offer_config_id=offer_config_id, offer_id=offer_id)
+    roll_back_to_original_state_before_test_add_new_offer(connection, offer_config_id=offer_config_id, offer_id=offer_id)
     create_new_offer(connection=connection)
     create_new_offer_config(connection=connection)
+
+def test_update_offer(connection):
+  oldname = "Forfait Internet Volume 750 F"
+  new_name = "Forfait Internet Volume Profit 750 F (Updated)"
+  roll_back_to_original_state_before_test_update_offer(connection=connection, old_name=oldname, new_name=new_name)
+  update_offer_by_name(connection, oldname, new_name)
+  # SELECT * FROM dw.dim_offer WHERE offer_id = 22; CES ofres ont eeffevtivment ete mis a jour dans le dw
+
+def test_update_offer_config(connection):
+  oldname = "Forfait Internet Volume 750 F"
+  new_name = "Forfait Internet Volume Profit 750 F (Updated)"
+  roll_back_to_original_state_before_test_update_offer(connection=connection, old_name=oldname, new_name=new_name)
+  update_offer_by_name(connection, oldname, new_name)
+  # SELECT * FROM dw.dim_offer WHERE offer_id = 22; CES ofres ont eeffevtivment ete mis a jour dans le dw
+
+
+
+def roll_back_to_original_state_before_test_update_offer(connection, offer_config_id, new_end_date):
+      query = f"""
+        UPDATE {OFFER_CONFIGS_TABLE}
+        SET {END_DATE_COL} = NULL
+        WHERE {ID_COL} = %s;
+        """
+      print(query)
+      with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (offer_config_id) )
+        connection.commit()
       
 if __name__ == "__main__":
         
         connection = get_connection(dbname=TRX_DB_NAME)
-        test_add_new_offer()
+        """test_add_new_offer()"""
+
+        
+        test_update_offer(connection)
+        
+
 
         
         """get_new_offer_created(connection, id=offer_id)

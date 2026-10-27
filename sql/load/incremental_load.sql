@@ -30,23 +30,32 @@ SELECT * FROM staging.services_usage WHERE batch_id = ANY(STRING_TO_ARRAY(:'batc
 
 -- dim_date (Already loaded initially)
 
--- Dim offer (Je suppose SCD 1 donc en cas de changement juste updte): Je considere seuelemt le nom de loffre, sa date de debut et de fin, comme SCD1 et tous les autres attributs comme SCD 0 (vu que la source possede start date et end date, une nouvelle offre est creer lorsuqe les autres attributs changent) 
+-- Dim offer (Je suppose SCD 1 donc en cas de changement juste updte): Je considere seuelemt le nom de loffre, sa date de debut et de fin (date de debut et de fin de loffre configuree), comme SCD1 et tous les autres attributs comme SCD 0 (vu que la source possede start date et end date, une nouvelle offre est creer lorsuqe les autres attributs changent) 
 -- 1. Mettre a jour le nom pour toutes les offres du DW dont le nom a change dans le batch courant
 UPDATE dw.dim_offer AS dof
-SET offer_name = o.name,
-    offer_start_date = oc.start_date,
-    offer_end_date = oc.end_date
+SET offer_name = o.name
 -- FROM staging.offer_configurations AS oc
-FROM current_batch_offer_configurations AS oc
-JOIN staging.offers AS o ON o.id = oc.offer_id -- Considerer tous les offres car il se peut que loffre concernee ne soit pas dans le batch doffre courant
-WHERE oc.id = dof.offer_config_id
-      AND (
+FROM current_batch_offers AS o
+-- JOIN staging.offers AS o ON o.id = oc.offer_id -- Considerer tous les offres car il se peut que loffre concernee ne soit pas dans le batch doffre courant
+WHERE 
+o.id = dof.offer_id AND 
+(
         o.name IS DISTINCT FROM dof.offer_name
-        OR oc.start_date IS DISTINCT FROM dof.offer_start_date
+
+      );
+
+UPDATE dw.dim_offer AS dof
+SET offer_start_date = oc.start_date,
+    offer_end_date = oc.end_date
+FROM current_batch_offer_configurations AS oc
+WHERE 
+oc.id = dof.offer_config_id AND 
+(
+        oc.start_date IS DISTINCT FROM dof.offer_start_date
         OR oc.end_date IS DISTINCT FROM dof.offer_end_date
       );
 
--- 2. Inserer les nouvelles offres (ceux qui ne sont pas dans le DW)
+-- 2. Inserer les nouvelles offres (ceux qui ne sont pas encore dans le DW)
 INSERT INTO dw.dim_offer(offer_config_id, offer_id, offer_name, offer_type, offer_category, validity_days, is_limitless, price_xof, value_xof, value_mb, xof_per_call_second, xof_per_sms_sent, xof_per_mb_used, offer_start_date, offer_end_date)
 SELECT oc.id AS offer_config_id,  o.id AS offer_id, o.name AS offer_name, o.type AS offer_type,
 CASE
