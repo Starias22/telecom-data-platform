@@ -13,6 +13,12 @@ CREATE TABLE IF NOT EXISTS pipeline_metadata.watermark(
         updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP--!!! Normal?
 );
 
+CREATE TABLE IF NOT EXISTS pipeline_metadata.platform_state(
+        id INT PRIMARY KEY DEFAULT 1,
+        state VARCHAR(20) --,
+        --completed_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
 
 
 /*-- Create a role for data engineers

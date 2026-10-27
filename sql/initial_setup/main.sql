@@ -6,6 +6,7 @@
 \ir 06_create_staging_tables.sql
 \ir 07_create_dq_tables.sql
 \ir 08_create_dw_tables.sql
+\ir 09_set_platform_state.sql
 
 
 \dn;

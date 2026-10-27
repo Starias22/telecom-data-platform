@@ -1,6 +1,7 @@
-from config.config import BATCH_LOGS_TABLE, BATCH_STATUS_COL, RUNNING,SUCCES, BATCH_ID_COL, STARTED_AT, FINISHED_AT, BATCH_ERROR_MESSAGE_COL
+from config.config import BATCH_LOGS_TABLE, BATCH_STATUS_COL, RUNNING,SUCCES, BATCH_ID_COL, STARTED_AT, FINISHED_AT, BATCH_ERROR_MESSAGE_COL, PLATFORM_INITIALIZATION_NOT_DONE_OR_INCOMPLET, PLATFORM_INITIALIZATION_SUCCESSFUL, PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET
 from datetime import date
 from src.utils.db_connector import get_connection
+from psycopg.errors import UndefinedTable
 
 def start_batch():
         connection = get_connection()
@@ -61,5 +62,4 @@ def mark_batch_as_failed(batch_id, error_message):
                 # finished_at = cursor.fetchone()[0]
                 connection.commit()
                 # return finished_at
-
 
