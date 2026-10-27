@@ -11,9 +11,9 @@ T07 | Update of an offer | Offer record updated (SCD1) | To be tested|
 T08 | Creation of a new customer | New customer loaded | To be tested|
 T09 | Update of a customer | Coherent SCD 2 historic | To be tested
 T10 | Purchase of an offer by a customer | Purchase loaded into purchase fact table with correct attributes | To be tested|
-T10 | Service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes and without double count | To be testd |
-T11 | Temporary failure of a task | Retry working | To be tested|
-T12 | Replay of the same batch | No duplicate | To be tested|
-T13 | Failure during load | Reprise corecte | To be tested|
-T14 | Failure of the pipeline | Coherent watermark | To be tested|
-T15 | Restart Kafka consumer (service usage extractor) or any other extractor | Reprise Correct pour lextractor conerne | To be tested|
+T11 | Service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes and without double count | To be testd |
+T12 | Temporary failure of a task | Retry working | To be tested|
+T13 | Replay of the same batch | No duplicate | To be tested|
+T14 | Failure during load | Reprise corecte | To be tested|
+T15 | Failure of the pipeline | Coherent watermark | To be tested|
+T16 | Restart Kafka consumer (service usage extractor) or any other extractor | Reprise Correct pour lextractor conerne | To be tested|
