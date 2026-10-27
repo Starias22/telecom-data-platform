@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from airflow import DAG
@@ -60,7 +60,7 @@ def build_pipeline(dag, incremental:bool=False):
     )
     watermark = str(get_watermark_task.output)
          
-    now = date.today().strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     extraction_cut_off_date = now
     today = now[:10] # Get the date part
 
