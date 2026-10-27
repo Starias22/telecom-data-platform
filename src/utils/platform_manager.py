@@ -31,32 +31,10 @@ def get_platform_state():
               return PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET
     return platform_state # Setep copleted / Initialized
 
-"""def get_x():
-       connection = get_connection()
-       query = f
-                SELECT COUNT(*) FROM {BATCH_LOGS_TABLE} WHERE {BATCH_STATUS_COL} = 'SUCCESS';
-                
-       print(query)
-       
-       with connection.cursor() as cursor:
-        try:
-            cursor.execute(query)
-            successful_batch_count = cursor.fetchone()[0]
-            print(successful_batch_count)
-        # !!! Later replace by throwing execptions
-        except UndefinedTable as e:
-              return PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET
-        return (
-               PLATFORM_INITIALIZATION_SUCCESSFUL if successful_batch_count != 0
-               else PLATFORM_INITIALIZATION_NOT_DONE_OR_INCOMPLET
-        )"""
-
 def is_platform_setup():
      platform_sate = get_platform_state()
      print(platform_sate)
      return platform_sate in [ SETUP_COMPLETED, INITIALIZED]
-
-
 
 def setup_platform_database():
         load_dotenv(ENV_FILE_PATH)
@@ -70,6 +48,16 @@ def setup_platform_database():
                 ],
                 env=env
         )
+
+def mark_platform_initialized(connection):
+        query = f"""
+                UPDATE {PLATFORM_STATE_TABLE} 
+                SET {PLATFORM_STATE_COL} = '{INITIALIZED}';
+                """
+        print(query)
+        with connection.cursor() as cursor:
+               cursor.execute(query)
+               connection.commit()
 
 if __name__ ==  "__main__":
        pass

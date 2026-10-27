@@ -203,7 +203,8 @@ def build_pipeline(dag, incremental:bool=False):
                 task_id="complete_batch",
                 python_callable=complete_batch,
                 op_kwargs= {
-                        "batch_id":batch_id
+                        "batch_id":batch_id,
+                        "platform_initialization":not incremental
                         },
                         dag=dag             
         )

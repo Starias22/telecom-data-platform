@@ -1,6 +1,7 @@
 from config.config import BATCH_LOGS_TABLE, BATCH_STATUS_COL, RUNNING,SUCCES, BATCH_ID_COL, STARTED_AT, FINISHED_AT, BATCH_ERROR_MESSAGE_COL, PLATFORM_INITIALIZATION_NOT_DONE_OR_INCOMPLET, PLATFORM_INITIALIZATION_SUCCESSFUL, PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET
 from datetime import date
 from src.utils.db_connector import get_connection
+from src.utils.platform_manager import mark_platform_initialized
 from psycopg.errors import UndefinedTable
 
 def start_batch():
@@ -26,7 +27,7 @@ def start_batch():
                 
                 return result
 
-def complete_batch(batch_id, termination_status = SUCCES):
+def complete_batch(batch_id, termination_status = SUCCES, platform_initialization=None):
         connection = get_connection()
         query = f"""
         UPDATE {BATCH_LOGS_TABLE}
@@ -42,6 +43,9 @@ def complete_batch(batch_id, termination_status = SUCCES):
                 )
                 finished_at = cursor.fetchone()[0]
                 connection.commit()
+        if platform_initialization:
+                mark_platform_initialized(connection)
+                
                 return finished_at
         
 
