@@ -20,7 +20,7 @@ CREATE TABLE offers_catalog.offers(
         start_date TIMESTAMP,
         end_date TIMESTAMP,
         created_at TIMESTAMP,
-        updated_at TIMESTAMP
+        updated_at TIMESTAMP DEFAUT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE offers_catalog.offer_billings(
@@ -29,7 +29,7 @@ CREATE TABLE offers_catalog.offer_billings(
         xof_per_sms DECIMAL,
         xof_per_mb DECIMAL,
         created_at TIMESTAMP,
-        updated_at TIMESTAMP
+        updated_at TIMESTAMP DEFAUT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE offers_catalog.offer_configurations(
@@ -43,7 +43,7 @@ CREATE TABLE offers_catalog.offer_configurations(
         start_date TIMESTAMP,
         end_date TIMESTAMP,
         created_at TIMESTAMP,
-        updated_at TIMESTAMP,
+        updated_at TIMESTAMP DEFAUT CURRENT_TIMESTAMP,
         FOREIGN KEY(offer_id) REFERENCES offers_catalog.offers(id),
         FOREIGN KEY(billing_id) REFERENCES offers_catalog.offer_billings(id)
 );
@@ -58,7 +58,7 @@ CREATE TABLE crm.customers(
         registration_date TIMESTAMP,
         status VARCHAR(10),
         termination_date TIMESTAMP,
-        updated_at TIMESTAMP
+        updated_at TIMESTAMP DEFAUT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE subscriptions.subscriptions(
@@ -68,7 +68,7 @@ CREATE TABLE subscriptions.subscriptions(
         registration_date TIMESTAMP,
         status VARCHAR(10),
         termination_date TIMESTAMP,
-        updated_at TIMESTAMP,
+        updated_at TIMESTAMP DEFAUT CURRENT_TIMESTAMP,
         FOREIGN KEY (customer_id) REFERENCES crm.customers(id)
 );
 
