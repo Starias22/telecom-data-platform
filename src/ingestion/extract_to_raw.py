@@ -1,5 +1,5 @@
 from os import makedirs
-from pathlib import Path
+import os
 import subprocess
 import duckdb
 import json
@@ -7,13 +7,17 @@ from kafka import KafkaConsumer
 from kafka.errors import BrokerNotAvailableError, KafkaTimeoutError
 import pandas as pd
 from glob import glob
-from config.paths import RAW_DATA_DIR, OFFER_BILLINGS_OUTPUT_FILE_NAME, OFFER_CONFIGS_OUTPUT_FILE_NAME, CURSTOMERS_OUTPUT_FILE_NAME, SUBSCRIPTIONS_OUTPUT_FILE_NAME, PURCHASES_DIR
+from config.paths import PURCHASES_DIR
 from config.column_names import PURCHASE_ID_COL, SUBSCRIPTION_ID_COL, TIMESTAMP_MILLISECONDS_COL, SERVICE_TYPE_COL, DATA_MB_COL, SMS_COUNT_COL, CALL_SECONDS_COL, MESSAGE_PARTITION_COL, MESSAGE_OFFSET_COL, BATCH_ID_COL
-from config.config import get_extraction_params, TRX_DB_NAME, HOST, USER, KAFKA_SERVERS, KAFKA_TOPIC, PASSDWORD
-# from src.utils.ba
-import ast
+from config.config import get_extraction_params, TRX_DB_NAME, HOST, USER, KAFKA_SERVERS, KAFKA_TOPIC
+import csv
 
-
+def is_csv_empty(file_path):
+       with open(file_path, mode="r", newline="") as f:
+              reader = csv.reader(f)
+              next(reader, None) # Ignore/spik header
+              return next(reader, None)  is None
+              
 
 def extract_from_db_table(batch_id, extraction_output_dir, table_name, watermark, extraction_cut_off_date):
     print(watermark)
@@ -35,48 +39,13 @@ def extract_from_db_table(batch_id, extraction_output_dir, table_name, watermark
 
     makedirs(extraction_output_dir, exist_ok=True)
     result = subprocess.run(command, input=query, capture_output=True, text=True)
+    
     print(result)
+    if is_csv_empty(output_path):
+           print(f"No data extracted from table {table_name}, so CSV file removed")
+           os.remove(output_path)
 
-## def extract_offers(batch_id, watermark, extraction_output_dir):
-       
-
-       
-       
-"""def extract_from_database(extraction_output_dir, watermark, batch_id):        
-        queries = []
-        print("Test")
-        print(batch_id)
-        print(type(batch_id))
-        makedirs(extraction_output_dir, exist_ok=True)
-        EXTRACTION_PARAMS = get_extraction_params(extraction_output_dir)
-        
-        for i in EXTRACTION_PARAMS.values():
-            table = i["query_table"]
-            last_update_date = i["update_date_col"]
-            output_path = i["output_path"]
-
-            query = f\\copy ( SELECT *, {int(batch_id)} AS batch_id FROM {table} WHERE {last_update_date} > '{watermark}' ) TO '{output_path}' WITH (FORMAT CSV, HEADER TRUE)
-
-            # !!!For prudcution environment think about COPY query keyword instead of \copy of psql
-
-
-            queries.append(query)
-            query = "\n".join(queries)
-            print(query)
-            # exit()
-            command = [
-                        "psql",
-                        "-U", USER,
-                        "-h", HOST,
-                        "-d", TRX_DB_NAME
-                ]
-
-        result = subprocess.run(command, input=query, capture_output=True, text=True)
-        # !!!later :  ahndle errors and get th eouptut to ... the number of records extracted CompletedProcess(args=['psql', '-U', 'starias22', '-h', 'localhost', '-d', 'ben_telecom'], returncode=0, stdout='COPY 28\nCOPY 15\nCOPY 0\nCOPY 5000000\nCOPY 5928704\n', stderr='')
-        # !!!Handle it so that the password wll not be prompted fro the command line
-        print(result)"""
-
-                
+              
 def extract_purchases(extraction_output_dir, batch_id, watermark, extraction_cut_off_date):
         # watermark = ast.literal_eval(watermark)["purchases"]
         print(watermark)
@@ -130,7 +99,7 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
             bootstrap_servers = KAFKA_SERVERS,
             enable_auto_commit=False,
             auto_offset_reset="earliest",
-            group_id = "batch-consumer-test-10", # !!! PLus tard Gerer cas ou les messages ont ete conomes mais une erreur faisant que ... k=jusqu la fin
+            group_id = "batch-consumer-test-13", # !!! PLus tard Gerer cas ou les messages ont ete conomes mais une erreur faisant que ... k=jusqu la fin
             consumer_timeout_ms = 5000
             )      
             message_records = []
@@ -144,17 +113,16 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
                     message_records.append(record)
             
             
-            usage_df = pd.DataFrame(message_records)        
+            if len(message_records) == 0:
+                   print("No new event has been produced")
+                   return
+            usage_df = pd.DataFrame(message_records)
+            usage_df = usage_df[[PURCHASE_ID_COL, SUBSCRIPTION_ID_COL, TIMESTAMP_MILLISECONDS_COL, SERVICE_TYPE_COL, DATA_MB_COL, SMS_COUNT_COL, CALL_SECONDS_COL, MESSAGE_PARTITION_COL, MESSAGE_OFFSET_COL]]
+            usage_df[SMS_COUNT_COL] = usage_df[SMS_COUNT_COL].astype("Int64")
+            usage_df[CALL_SECONDS_COL] = usage_df[CALL_SECONDS_COL].astype("Int64")
             print(usage_df)
-            if len(usage_df!=0):
-                    usage_df = usage_df[[PURCHASE_ID_COL, SUBSCRIPTION_ID_COL, TIMESTAMP_MILLISECONDS_COL, SERVICE_TYPE_COL, DATA_MB_COL, SMS_COUNT_COL, CALL_SECONDS_COL, MESSAGE_PARTITION_COL, MESSAGE_OFFSET_COL]]
-                    
-                    
-                    usage_df[SMS_COUNT_COL] = usage_df[SMS_COUNT_COL].astype("Int64")
-                    usage_df[CALL_SECONDS_COL] = usage_df[CALL_SECONDS_COL].astype("Int64")
-                    print(usage_df)
-                    print(batch_id)
-                    usage_df[BATCH_ID_COL] = int(batch_id)
+            print(batch_id)
+            usage_df[BATCH_ID_COL] = int(batch_id)
 
             print(usage_df)
             # !!! Later handle scalability for ex by usin chuncsize? and avoid stroing all  the usage_df.... in the memory

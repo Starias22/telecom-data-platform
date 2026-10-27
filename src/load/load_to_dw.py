@@ -11,18 +11,17 @@ from config.config import HOST, DATA_PLATFORM_DB, USER
 load_dotenv(ENV_FILE_PATH)
 env = os.environ.copy()
 
-def load(incremental=True):
-        subprocess.run(
-                [
+def load(incremental=True, batch_id=None):
+        command = [
                         "psql",
                         "-h", HOST,
                         "-U", USER,
                         "-d", DATA_PLATFORM_DB,
                         "-f", INCREMENTAL_LOAD_SQL_FILE_PATH if incremental else INITIAL_LOAD_SQL_FILE_PATH
-                        #"-v", f"batch_id={batch_id}"
-                ],
-                env=env
-        )
+                ]
+        
+        command.extend(["-v", f"batch_id={batch_id}"] if batch_id is not None else [])
+        subprocess.run(command, env=env)
         
 if __name__ ==  "__main__":
         load(incremental=False)

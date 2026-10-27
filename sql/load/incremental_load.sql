@@ -143,8 +143,8 @@ SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS date_key, customer
 -- Fact consumption
 INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS (
-SELECT * FROM staging.services_usage AS su
--- SELECT * FROM current_batch_services_usage AS su
+-- SELECT * FROM staging.services_usage AS su
+SELECT * FROM current_batch_services_usage AS su
 WHERE NOT EXISTS(
     SELECT 1 FROM data_quality.issues AS dqi WHERE table_name = 'services_usage'
                                              AND issue_type = 'Uniqueness'

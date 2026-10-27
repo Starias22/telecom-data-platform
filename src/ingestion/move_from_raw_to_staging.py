@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from config.config import HOST, USER, get_staging_params, DATA_PLATFORM_DB
@@ -11,12 +12,16 @@ def move_to_staging(staging_raw_data_dir):
         for i in STAGING_PARAMS.values():
                 table = i["table"]
                 file_path = i["file_path"]
+                if not file_path.exists():
+                        print(f"No data to move to {table}")
+                        continue
                 query = f"""\\copy {table} FROM {file_path} WITH (FORMAT CSV, HEADER TRUE)"""
         
                 # !!!For prudcution environment think about COPY query keyword instead of \copy of psql
                 # query = f"""copy ( SELECT * FROM {table} WHERE {insert_date} BETWEEN '{extraction_start_date}' AND '{extraction_end_date}' OR {last_update_date} BETWEEN '{extraction_start_date}' AND '{extraction_end_date}') To STDOUT WITH (FORMAT CSV, HEADER TRUE);"""
 
                 queries.append(query)
+
         
         
         """\\copy {table} FROM {file_path} WITH (FORMAT CSV, HEADER TRUE)
@@ -29,17 +34,23 @@ def move_to_staging(staging_raw_data_dir):
         i = STAGING_PARAMS["services_usage"]
         table = i["table"]
         file_path = i["file_path"]
+        
 
         temp_table = "tmp_service_usage"
         columns = "purchase_id, subscription_id, timestamp, service_type, data_mb, sms_count, call_seconds, message_partition, message_offset, batch_id"
+        
+        
+
+       
+        if len(queries) == 0:
+                print("No data moved to staging cause no data extracted from any sources")
+                return
         
         query = f"""
         CREATE TEMP TABLE {temp_table} AS SELECT {columns} FROM {table} WITH NO DATA ;
         \\copy {temp_table} FROM {file_path} WITH (FORMAT CSV, HEADER TRUE);
         INSERT INTO {table} ({columns}) SELECT * FROM {temp_table} ON CONFLICT (message_partition, message_offset) DO NOTHING;
         """
-
-       
         print(query)
         queries[-1] = query # Replace last query
 
@@ -64,16 +75,7 @@ def move_to_staging(staging_raw_data_dir):
         # !!!Handle it so that the password wll not be prompted fro the command line
         print(result)
 
-        
-        """command = [
-                "psql",
-                "-U", "starias22",
-                "-h", "localhost",
-                "-d", "ben_telecom_dev",
-                "-c", query
-        ]"""
-        # with open()
-        # subprocess.run(command)
+
         return
 
 # move_to_staging("/home/starias/myprojects/telecom-offer-performance-analytics-platform/data/raw/2026-10-14")

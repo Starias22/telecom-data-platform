@@ -64,7 +64,7 @@ def build_pipeline(dag, incremental:bool=False):
     extraction_cut_off_date = now
     today = now[:10] # Get the date part
 
-    extraction_output_dir = str(Path(RAW_DATA_DIR) / today)   
+    extraction_output_dir = str(Path(RAW_DATA_DIR) / today / f"batch_id={batch_id}")   
     extraction_params = {
                        "extraction_output_dir":extraction_output_dir,
                        # "watermark":watermarks["offers"],
