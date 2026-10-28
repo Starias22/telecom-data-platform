@@ -1,6 +1,10 @@
+from datetime import datetime
+from pathlib import Path
+
 from config.config import OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE,START_DATE_COL, END_DATE_COL, CUSTOMERS_TABLE
 from config.config import BUNDLE
 from  src.utils.db_connector import get_connection
+from src.utils.utils import fmt_datetime
 
 NAME_COL = "name"
 TYPE_COL = "type"
@@ -19,6 +23,16 @@ BIRTHDATE_COL = "birthdate"
 TERMINATION_DATE_COL = "termination_date"
 INDIVIDUAL = "INDIVIDUAL"
 YOUTH = "YOUTH"
+
+USSD = "USSD"
+AIRTIME = "AIRTIME"
+OFFER_CONFIG_ID_COL = "offer_config_id"
+SUBSCRIPTION_ID_COL = "subscription_id"
+PURCHASED_AT_COL = "purchased_at"
+PURCHASE_CHANNEL_COL = "purchase_channel"
+PAYMENT_METHOD_COL =  "payment_method"
+PURCHASE_DATA_DIR = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/data/purchases"
+
 
 
 
@@ -259,6 +273,33 @@ def test_add_new_customer(connection):
     # SELECT * FROM dw.dim_customer WHERE customer_id = 10000000;
     
 
+def test_purchase_an_offer():
+     purchase_id = 10_000_000
+     subscription_id = 9
+     ofer_config_id = 97
+     purchased_at = "2026-10-20 15:45:18"
+     purchased_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+     purchase_channel = USSD
+     payment_method = AIRTIME
+     purchase_df = pd.DataFrame({
+          ID_COL:[purchase_id],
+          SUBSCRIPTION_ID_COL:[subscription_id],
+          OFFER_CONFIG_ID_COL:[ofer_config_id],
+          PURCHASED_AT_COL:[purchased_at],
+          PURCHASE_CHANNEL_COL:[purchase_channel],
+          PAYMENT_METHOD_COL:[payment_method]
+          })
+     print(purchase_df)
+     date_part = fmt_datetime(purchased_at)
+     print(date_part)
+     file_name = f"{date_part}.parquet"
+     file_path = Path(PURCHASE_DATA_DIR) / file_name
+     print(file_name)
+     print(file_path)
+     purchase_df.to_parquet(file_path)
+     # SELECT * FROM dw.fact_purchase WHERE purchase_id = 10000000; -- The purchase is effectively loaded into the DW
+    
+    
 
       
 if __name__ == "__main__":
@@ -273,9 +314,12 @@ if __name__ == "__main__":
         
         test_add_new_customer(connection) # Passed
         test_update_customer_scd2_attribute(connection) # Passed        
-        """
         
+        test_update_customer_scd2_attribute(connection) # Passed  
+
         test_update_customer_scd1_attribute(connection) # Passed
+        """  
+        test_purchase_an_offer() # Passed
         
 
 

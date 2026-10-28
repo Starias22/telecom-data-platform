@@ -1,5 +1,6 @@
 from os import makedirs
 import os
+from pathlib import Path
 import subprocess
 import duckdb
 import json
@@ -11,6 +12,7 @@ from config.paths import PURCHASES_DIR
 from config.column_names import PURCHASE_ID_COL, SUBSCRIPTION_ID_COL, TIMESTAMP_MILLISECONDS_COL, SERVICE_TYPE_COL, DATA_MB_COL, SMS_COUNT_COL, CALL_SECONDS_COL, MESSAGE_PARTITION_COL, MESSAGE_OFFSET_COL, BATCH_ID_COL
 from config.config import get_extraction_params, TRX_DB_NAME, HOST, USER, KAFKA_SERVERS, KAFKA_TOPIC
 import csv
+from src.utils.utils import fmt_datetime
 
 def is_csv_empty(file_path):
        with open(file_path, mode="r", newline="") as f:
@@ -45,10 +47,11 @@ def extract_from_db_table(batch_id, extraction_output_dir, table_name, watermark
            print(f"No data extracted from table {table_name}, so CSV file removed")
            os.remove(output_path)
 
-              
+
 def extract_purchases(extraction_output_dir, batch_id, watermark, extraction_cut_off_date):
         # watermark = ast.literal_eval(watermark)["purchases"]
         print(watermark)
+
 
         
         connection = duckdb.connect()
@@ -56,15 +59,17 @@ def extract_purchases(extraction_output_dir, batch_id, watermark, extraction_cut
         
 
         purchase_files = glob(f"{PURCHASES_DIR}/*.parquet")
-        # print(purchase_files)
+        print(purchase_files)
         # !!! Trouver une altenatic a cete approcha car siu des millins de fichiers, .., tres lent
 
         files_to_extract = []
-        start_date = watermark.replace("-", "")
-        
+        start_date = fmt_datetime(watermark )
+        extraction_cut_off_date = fmt_datetime(extraction_cut_off_date)
+        print(start_date)     
 
         for f in purchase_files:
-                file_generation_date = f.removesuffix(".parquet")[-8:]
+                file_generation_date = fmt_datetime(Path(f).stem)
+                print(file_generation_date)
                 # print(file_generation_date)
                 if file_generation_date > start_date and file_generation_date <= extraction_cut_off_date:
                 # if file_generation_date >= start_date and file_generation_date <= end_date:
@@ -99,7 +104,7 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
             bootstrap_servers = KAFKA_SERVERS,
             enable_auto_commit=False,
             auto_offset_reset="earliest",
-            group_id = "batch-consumer-test-16", # !!! PLus tard Gerer cas ou les messages ont ete conomes mais une erreur faisant que ... k=jusqu la fin
+            group_id = "batch-consumer-test-201", # !!! PLus tard Gerer cas ou les messages ont ete conomes mais une erreur faisant que ... k=jusqu la fin
             consumer_timeout_ms = 5000
             )      
             message_records = []
