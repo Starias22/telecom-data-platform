@@ -42,7 +42,6 @@ def create_new_offer_config(connection, id=1000, offer_id=100, value_xof=3000, b
     
 
 def update_offer_by_name(connection, old_name, new_name):
-    # Mettre un terme a cette offre (set end_date = curenttimsetemp)
     query = f"""
         UPDATE {OFFERS_TABLE}
         SET {NAME_COL} = %s
@@ -104,6 +103,8 @@ def test_add_new_offer(connection):
     create_new_offer(connection=connection)
     create_new_offer_config(connection=connection)
 
+
+
 def test_update_offer(connection):
   oldname = "Forfait Internet Volume 750 F"
   new_name = "Forfait Internet Volume Profit 750 F (Updated)"
@@ -111,16 +112,20 @@ def test_update_offer(connection):
   update_offer_by_name(connection, oldname, new_name)
   # SELECT * FROM dw.dim_offer WHERE offer_id = 22; CES ofres ont eeffevtivment ete mis a jour dans le dw
 
-def test_update_offer_config(connection):
-  oldname = "Forfait Internet Volume 750 F"
-  new_name = "Forfait Internet Volume Profit 750 F (Updated)"
-  roll_back_to_original_state_before_test_update_offer(connection=connection, old_name=oldname, new_name=new_name)
-  update_offer_by_name(connection, oldname, new_name)
-  # SELECT * FROM dw.dim_offer WHERE offer_id = 22; CES ofres ont eeffevtivment ete mis a jour dans le dw
+def update_offer_config(connection, offer_config_id):
+    # Mettre un terme a cette oonfiguration doffre (set end_date = curenttimsetemp)
+    query = f"""
+        UPDATE {OFFER_CONFIGS_TABLE}
+        SET {END_DATE_COL} = CURRENT_TIMESTAMP
+        WHERE {ID_COL} = %s;
+        """
+    print(query)
+    with connection.cursor() as cursor:
+      cursor.execute(query,
+      (offer_config_id, ) )
+      connection.commit()
 
-
-
-def roll_back_to_original_state_before_test_update_offer(connection, offer_config_id, new_end_date):
+def roll_back_to_original_state_before_test_update_offer_config(connection, offer_config_id):
       query = f"""
         UPDATE {OFFER_CONFIGS_TABLE}
         SET {END_DATE_COL} = NULL
@@ -129,16 +134,27 @@ def roll_back_to_original_state_before_test_update_offer(connection, offer_confi
       print(query)
       with connection.cursor() as cursor:
         cursor.execute(query,
-                       (offer_config_id) )
+                       (offer_config_id,) )
         connection.commit()
+
+def test_update_offer_config(connection):
+  offer_config_id = 97
+  roll_back_to_original_state_before_test_update_offer_config(connection=connection,offer_config_id=offer_config_id)
+  update_offer_config(connection, offer_config_id=offer_config_id)
+  # SELECT * FROM dw.dim_offer WHERE offer_config_id = 97;
+
+
+
       
 if __name__ == "__main__":
         
         connection = get_connection(dbname=TRX_DB_NAME)
-        """test_add_new_offer()"""
+        """test_add_new_offer() # Passed
 
         
-        test_update_offer(connection)
+        test_update_offer(connection) # Passed
+        """
+        test_update_offer_config(connection) # Passed
         
 
 
