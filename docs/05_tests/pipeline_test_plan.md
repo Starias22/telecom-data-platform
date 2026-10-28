@@ -13,9 +13,10 @@ T09 | Creation of a new customer | One version of new customer loaded into dim_c
 T10 | Update an SCD 2 attribute of a customer | Two versions of customers now available in dim_customer, all with correct attributes (the previous one closed and the new one current with the new value of the updated attribute) | Passed
 T11 | Update an SCD 1 attribute of a customer (preferly the one of the previous test, so prerelery permor this test without rolling back the previous one) | The attribute updated in dim_customer for all versions of the concerned customer | Passed |
 T12 | Purchase of an offer by a customer | Purchase loaded into purchase fact table with correct attributes | Passed |
-T13 | New service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes and without double count | To be tested |
-T14 | Temporary failure of a task | Retry working | To be tested |
-T15 | Replay of the same batch | No duplicate | To be tested |
-T16 | Failure during load | Reprise corecte | To be tested |
-T17 | Failure of the pipeline | Coherent watermark | To be tested |
+T13 | New service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes, without error and without double count | To be tested |
+T14 | New service usage events with some with existing records for the same (date, purchase) in the consumption fact table | Service consumption values aggregated to their matching (date, purchase) in the consumption fact table | To be tested |
+T15 | Temporary failure of a task | Retry working | To be tested |
+T16 | Replay of the same batch | No duplicate | To be tested |
+T17 | Failure during load | Reprise corecte | To be tested |
+T18 | Failure of the pipeline | Coherent watermark | To be tested |
 T18 | Restart Kafka consumer (service usage extractor) or any other extractor | Reprise Correct pour lextractor conerne | To be tested |
