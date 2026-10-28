@@ -298,6 +298,8 @@ def test_purchase_an_offer():
      print(file_path)
      purchase_df.to_parquet(file_path)
      # SELECT * FROM dw.fact_purchase WHERE purchase_id = 10000000; -- The purchase is effectively loaded into the DW
+     # SELECT dc.customer_id, s.id AS subscription_id  FROM dw.dim_customer AS dc JOIN staging.subscriptions AS s ON s.customer_id = dc.customer_id WHERE customer_key = 1189472 -- Verifier que ca correspond effecivement au bon customer
+
     
     
 
