@@ -84,16 +84,16 @@ def update_offer_by_name(connection, old_name, new_name):
         connection.commit()
                         
 
-def update_customer_scd1_attribute(connection, customer_id):
+def update_customer_scd1_attribute(connection, customer_id, new_gender):
     query = f"""
         UPDATE {CUSTOMERS_TABLE}
-        SET {TERMINATION_DATE_COL} = CURRENT_TIMESTAMP
+        SET {GENDER_COL} = %s
         WHERE {ID_COL} = %s;
         """
     print(query)
     with connection.cursor() as cursor:
         cursor.execute(query,
-                       (customer_id,) )
+                       (new_gender, customer_id) )
         connection.commit()
 
 def update_customer_scd2_attribute(connection, customer_id, new_city):
@@ -176,22 +176,24 @@ def test_update_offer(connection):
   # SELECT * FROM dw.dim_offer WHERE offer_id = 22; CES ofres ont eeffevtivment ete mis a jour dans le dw
 
 def test_update_customer_scd1_attribute(connection):
-  customer_id = 10
-  roll_back_to_original_state_before_test_customer_scd1_attribute(connection=connection, customer_id=customer_id)
-  update_customer_scd1_attribute(connection, customer_id=customer_id)
-  # SELECT * FROM crm.customers WHERE id = 10;
-  # SELECT * FROM dw.dim_customer WHERE customer_id = 10;
+  customer_id = 7
+  old_gender = "F"
+  new_gender = "M"
+  roll_back_to_original_state_before_test_customer_scd1_attribute(connection=connection, customer_id=customer_id, old_gender=old_gender)
+  update_customer_scd1_attribute(connection, customer_id=customer_id, new_gender=new_gender)
+  # SELECT * FROM crm.customers WHERE id = 7;
+  # SELECT * FROM dw.dim_customer WHERE customer_id = 7;
 
 
 def test_update_customer_scd2_attribute(connection):
-  customer_id = 10
-  old_city = "Bembèrèkè"
-  new_city = "Kandi"
+  customer_id = 7
+  old_city = "Djougou"
+  new_city = "Pobè"
   
   roll_back_to_original_state_before_test_customer_scd2_attribute(connection=connection, customer_id=customer_id, old_city=old_city)
   update_customer_scd2_attribute(connection, customer_id=customer_id, new_city=new_city)
-  # SELECT * FROM crm.customers WHERE id = 10;
-  # SELECT * FROM dw.dim_customer WHERE customer_id = 10;  -- Two versions of customers in the dw;
+  # SELECT * FROM crm.customers WHERE id = 7;
+  # SELECT * FROM dw.dim_customer WHERE customer_id = 7;  -- Two versions of customers in the dw with the old oone out to date and the new one current;
 
 
 def roll_back_to_original_state_before_test_customer_scd2_attribute(connection, customer_id, old_city):
@@ -231,16 +233,16 @@ def roll_back_to_original_state_before_test_update_offer_config(connection, offe
                        (offer_config_id,) )
         connection.commit()
 
-def roll_back_to_original_state_before_test_customer_scd1_attribute(connection, customer_id):
+def roll_back_to_original_state_before_test_customer_scd1_attribute(connection, customer_id, old_gender):
       query = f"""
         UPDATE {CUSTOMERS_TABLE}
-        SET {TERMINATION_DATE_COL} = NULL
+        SET {GENDER_COL} = %s
         WHERE {ID_COL} = %s;
         """
       print(query)
       with connection.cursor() as cursor:
         cursor.execute(query,
-                       (customer_id,) )
+                       (old_gender, customer_id) )
         connection.commit()
 
 def test_update_offer_config(connection):
@@ -270,11 +272,10 @@ if __name__ == "__main__":
         test_update_offer_config(connection) # Passed
         
         test_add_new_customer(connection) # Passed
+        test_update_customer_scd2_attribute(connection) # Passed        
         """
-        test_update_customer_scd2_attribute(connection) # Passed
         
-
-        # test_update_customer_scd1_attribute(connection)
+        test_update_customer_scd1_attribute(connection) # Passed
         
 
 
