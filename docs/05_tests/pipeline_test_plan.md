@@ -19,4 +19,4 @@ T15 | Temporary failure of a task | Retry working | To be tested |
 T16 | Replay of the same batch | No duplicate | To be tested |
 T17 | Failure during load | Reprise corecte | To be tested |
 T18 | Failure of the pipeline | Coherent watermark | To be tested |
-T18 | Restart Kafka consumer (service usage extractor) or any other extractor | Reprise Correct pour lextractor conerne | To be tested |
+T19 | Restart Kafka consumer (service usage extractor) or any other extractor | Reprise Correct pour lextractor conerne | To be tested |
