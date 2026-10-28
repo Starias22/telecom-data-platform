@@ -1,4 +1,4 @@
-from config.config import OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE,START_DATE_COL, END_DATE_COL
+from config.config import OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE,START_DATE_COL, END_DATE_COL, CUSTOMERS_TABLE
 from config.config import BUNDLE
 from  src.utils.db_connector import get_connection
 
@@ -10,10 +10,36 @@ OFFER_ID_COL = "offer_id"
 VALUE_XOF_COL = "value_xof"
 VALIDITY_DAYS_COL = "validity_days"
 BILLING_ID_COL = "billing_id"
+
+CITY_COL = "city"
+CUSTOMER_TYPE_COL = "customer_type"
+GENDER_COL = "gender"
+CUSTOMER_SEGMENT_COL = "customer_segment"
+BIRTHDATE_COL = "birthdate"
+INDIVIDUAL = "INDIVIDUAL"
+YOUTH = "YOUTH"
+
+
+
+
 import pandas as pd
 
 
-def create_new_offer(connection, id = 100, name = "Forfait Maxi Appel + Internet 2000 F", type=BUNDLE, price=2_000):
+def create_new_customer(connection, id, city ="Covè", customer_type=INDIVIDUAL, gender="M",  customer_segment=YOUTH, birthdate="2002-06-13"):
+        
+        query = f"""
+        INSERT INTO {CUSTOMERS_TABLE} ({ID_COL}, {CITY_COL}, {CUSTOMER_TYPE_COL}, {GENDER_COL}, {CUSTOMER_SEGMENT_COL}, {BIRTHDATE_COL})
+        VALUES (%s, %s, %s, %s, %s, %s);
+        """
+        print(query)
+        with connection.cursor() as cursor:
+                cursor.execute(
+                        query, 
+                        (id, city, customer_type, gender, customer_segment, birthdate)
+                        )
+                connection.commit()
+
+def create_new_offer(connection, id, name = "Forfait Maxi Appel + Internet 2000 F", type=BUNDLE, price=2_000):
         
         query = f"""
         INSERT INTO {OFFERS_TABLE} ({ID_COL}, {NAME_COL}, {TYPE_COL}, {PRICE_XOF_COL})
@@ -26,6 +52,9 @@ def create_new_offer(connection, id = 100, name = "Forfait Maxi Appel + Internet
                         (id, name, type, price)
                         )
                 connection.commit()
+
+
+
 
 def create_new_offer_config(connection, id=1000, offer_id=100, value_xof=3000, billing_id=15, validity_days=7):
     query = f"""
@@ -85,6 +114,15 @@ def roll_back_to_original_state_before_test_add_new_offer(connection, offer_conf
             cursor.execute(query)
             connection.commit()
 
+def roll_back_to_original_state_before_test_create_new_customer(connection, customer_id):
+      query = f"""
+      DELETE FROM {CUSTOMERS_TABLE} WHERE id = {customer_id};
+        """
+      print(query)
+      with connection.cursor() as cursor:
+            cursor.execute(query)
+            connection.commit()
+
 def roll_back_to_original_state_before_test_update_offer(connection, old_name, new_name):
       query = f"""
         UPDATE {OFFERS_TABLE}
@@ -102,6 +140,7 @@ def test_add_new_offer(connection):
     roll_back_to_original_state_before_test_add_new_offer(connection, offer_config_id=offer_config_id, offer_id=offer_id)
     create_new_offer(connection=connection)
     create_new_offer_config(connection=connection)
+  
 
 
 
@@ -144,6 +183,13 @@ def test_update_offer_config(connection):
   # SELECT * FROM dw.dim_offer WHERE offer_config_id = 97;
 
 
+def test_add_new_customer(connection):
+    customer_id = 10_000_000
+    roll_back_to_original_state_before_test_create_new_customer(connection, customer_id=customer_id)
+    create_new_customer(connection=connection, id=customer_id)
+    # SELECT * FROM dw.dim_customer WHERE customer_id = 10000000;
+    
+
 
       
 if __name__ == "__main__":
@@ -153,8 +199,10 @@ if __name__ == "__main__":
 
         
         test_update_offer(connection) # Passed
-        """
+        
         test_update_offer_config(connection) # Passed
+        """
+        test_add_new_customer(connection) # Passed
         
 
 
