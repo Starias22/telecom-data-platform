@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS dw.dim_customer(
         termination_date TIMESTAMP,
 
         /*Track History (SCD Type 2)*/
-        valid_from DATE,
-        valid_to DATE DEFAULT '9999-12-31',
+        valid_from TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        valid_to TIMESTAMP DEFAULT '9999-12-31',
         is_current BOOLEAN
         );
 
