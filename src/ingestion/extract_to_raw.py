@@ -122,6 +122,11 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
                    print("No new event has been produced")
                    return
             usage_df = pd.DataFrame(message_records)
+
+            for col in [CALL_SECONDS_COL, SMS_COUNT_COL, DATA_MB_COL]:
+                if col not in usage_df.columns:
+                   usage_df[col] = None
+            print(usage_df)
             usage_df = usage_df[[PURCHASE_ID_COL, SUBSCRIPTION_ID_COL, TIMESTAMP_MILLISECONDS_COL, SERVICE_TYPE_COL, DATA_MB_COL, SMS_COUNT_COL, CALL_SECONDS_COL, MESSAGE_PARTITION_COL, MESSAGE_OFFSET_COL]]
             usage_df[SMS_COUNT_COL] = usage_df[SMS_COUNT_COL].astype("Int64")
             usage_df[CALL_SECONDS_COL] = usage_df[CALL_SECONDS_COL].astype("Int64")
