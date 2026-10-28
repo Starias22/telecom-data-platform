@@ -16,6 +16,7 @@ CUSTOMER_TYPE_COL = "customer_type"
 GENDER_COL = "gender"
 CUSTOMER_SEGMENT_COL = "customer_segment"
 BIRTHDATE_COL = "birthdate"
+TERMINATION_DATE_COL = "termination_date"
 INDIVIDUAL = "INDIVIDUAL"
 YOUTH = "YOUTH"
 
@@ -82,7 +83,32 @@ def update_offer_by_name(connection, old_name, new_name):
                        (new_name, old_name) )
         connection.commit()
                         
-        
+
+def update_customer_scd1_attribute(connection, customer_id):
+    query = f"""
+        UPDATE {CUSTOMERS_TABLE}
+        SET {TERMINATION_DATE_COL} = CURRENT_TIMESTAMP
+        WHERE {ID_COL} = %s;
+        """
+    print(query)
+    with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (customer_id,) )
+        connection.commit()
+
+def update_customer_scd2_attribute(connection, customer_id, new_city):
+    query = f"""
+        UPDATE {CUSTOMERS_TABLE}
+        SET {CITY_COL} = %s 
+        WHERE {ID_COL} = %s;
+        """
+    print(query)
+    with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (new_city, customer_id) )
+        connection.commit()
+
+
 def get_new_offer_created(connection, id):
       query = f"""
     SELECT * FROM {OFFERS_TABLE} WHERE id = {id};
@@ -142,14 +168,43 @@ def test_add_new_offer(connection):
     create_new_offer_config(connection=connection)
   
 
-
-
 def test_update_offer(connection):
   oldname = "Forfait Internet Volume 750 F"
   new_name = "Forfait Internet Volume Profit 750 F (Updated)"
   roll_back_to_original_state_before_test_update_offer(connection=connection, old_name=oldname, new_name=new_name)
   update_offer_by_name(connection, oldname, new_name)
   # SELECT * FROM dw.dim_offer WHERE offer_id = 22; CES ofres ont eeffevtivment ete mis a jour dans le dw
+
+def test_update_customer_scd1_attribute(connection):
+  customer_id = 10
+  roll_back_to_original_state_before_test_customer_scd1_attribute(connection=connection, customer_id=customer_id)
+  update_customer_scd1_attribute(connection, customer_id=customer_id)
+  # SELECT * FROM crm.customers WHERE id = 10;
+  # SELECT * FROM dw.dim_customer WHERE customer_id = 10;
+
+
+def test_update_customer_scd2_attribute(connection):
+  customer_id = 10
+  old_city = "Bembèrèkè"
+  new_city = "Kandi"
+  
+  roll_back_to_original_state_before_test_customer_scd2_attribute(connection=connection, customer_id=customer_id, old_city=old_city)
+  update_customer_scd2_attribute(connection, customer_id=customer_id, new_city=new_city)
+  # SELECT * FROM crm.customers WHERE id = 10;
+  # SELECT * FROM dw.dim_customer WHERE customer_id = 10;  -- Two versions of customers in the dw;
+
+
+def roll_back_to_original_state_before_test_customer_scd2_attribute(connection, customer_id, old_city):
+      query = f"""
+        UPDATE {CUSTOMERS_TABLE}
+        SET {CITY_COL} = %s
+        WHERE {ID_COL} = %s;
+        """
+      print(query)
+      with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (old_city, customer_id) )
+        connection.commit()
 
 def update_offer_config(connection, offer_config_id):
     # Mettre un terme a cette oonfiguration doffre (set end_date = curenttimsetemp)
@@ -174,6 +229,18 @@ def roll_back_to_original_state_before_test_update_offer_config(connection, offe
       with connection.cursor() as cursor:
         cursor.execute(query,
                        (offer_config_id,) )
+        connection.commit()
+
+def roll_back_to_original_state_before_test_customer_scd1_attribute(connection, customer_id):
+      query = f"""
+        UPDATE {CUSTOMERS_TABLE}
+        SET {TERMINATION_DATE_COL} = NULL
+        WHERE {ID_COL} = %s;
+        """
+      print(query)
+      with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (customer_id,) )
         connection.commit()
 
 def test_update_offer_config(connection):
@@ -201,8 +268,13 @@ if __name__ == "__main__":
         test_update_offer(connection) # Passed
         
         test_update_offer_config(connection) # Passed
-        """
+        
         test_add_new_customer(connection) # Passed
+        """
+        test_update_customer_scd2_attribute(connection) # Passed
+        
+
+        # test_update_customer_scd1_attribute(connection)
         
 
 

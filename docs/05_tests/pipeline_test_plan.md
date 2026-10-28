@@ -9,9 +9,9 @@ T05 | Incremental Execution of the Pipeline without new data | No duplicates and
 T06 | Creation of a new offer | New offer loaded into the datawarehouse with correct attributes | Passed |
 T07 | Update the name of an offer (which is a SCD 1 attribute in dim_offer) | offer name updated to that new name for all records of of the concerned offer in dim_offer (SCD1) | Passed |
 T08 | Update the end date of an offer configuration (which is a SCD 1 attribute in dim_offer) | offer end date updated to that new end date for the concerned record of offer configuration in dim_offer | Passed |
-T09 | Creation of a new customer | New customer loaded into dim_customer with correct attributes | Passed |
-T10 | Update an SCD 1 attribute of a customer | The attribute updated in dim_customer for all versions of the concerned customer | To be tested
-T11 | Update an SCD 2 attribute of a customer | Coherent SCD 2 historic | To be tested
+T09 | Creation of a new customer | One version of new customer loaded into dim_customer with correct attributes | Passed |
+T10 | Update an SCD 2 attribute of a customer | Two versions of customers now available in dim_customer, all with correct attributes (the previous one closed and the new one current with the new value of the updated attribute) | Passed
+T11 | Update an SCD 1 attribute of a customer (preferly the one of the previous test, so combine previous test with this one) | The attribute updated in dim_customer for all versions of the concerned customer | To be tested
 T12 | Purchase of an offer by a customer | Purchase loaded into purchase fact table with correct attributes | To be tested|
 T13 | Service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes and without double count | To be testd |
 T14 | Temporary failure of a task | Retry working | To be tested|
