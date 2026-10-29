@@ -1,3 +1,4 @@
+-- !!! Later : code pour eviter qu'un achat deja existant se charge plusieurs fois
 CREATE TEMP TABLE current_batch_offers AS(
 SELECT * FROM staging.offers WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
 );
@@ -150,6 +151,7 @@ SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS date_key, customer
 
 
 -- Fact consumption
+-- SELECT * FROM current_batch_services_usage;
 INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS (
 -- SELECT * FROM staging.services_usage AS su
@@ -163,29 +165,42 @@ WHERE NOT EXISTS(
                 )
 ),
 service_usage AS (
-SELECT * , timestamp::DATE AS usage_date FROM service_usage_deduplicated
+SELECT purchase_id, subscription_id,  timestamp::DATE AS usage_date, call_seconds, sms_count, data_mb FROM service_usage_deduplicated
 ),
-consumption_daily_events AS(
-SELECT purchase_id, TO_CHAR(usage_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, call_seconds AS call_duration_seconds, sms_count AS sms_sent_count, data_mb AS data_used_mb
-FROM service_usage AS su
-JOIN staging.subscriptions AS s ON s.id = su.subscription_id
+service_usage_aggregated_ranked AS (
+SELECT purchase_id, usage_date, subscription_id,
+SUM(call_seconds) OVER(w) AS call_duration_seconds,
+SUM(sms_count) OVER(w) AS sms_sent_count,
+SUM(data_mb) OVER(w) AS data_used_mb,
+ROW_NUMBER() OVER (w) AS rn
+FROM service_usage
+WINDOW w AS (PARTITION BY purchase_id, usage_date)      
+),
+service_usage_aggregated AS (
+SELECT purchase_id, usage_date, subscription_id,  call_duration_seconds, sms_sent_count, data_used_mb
+FROM service_usage_aggregated_ranked WHERE rn = 1
+),
+service_usage_aggregated_enriched AS(
+SELECT purchase_id, usage_date, offer_config_id, customer_key, call_duration_seconds, sms_sent_count, data_used_mb
+FROM service_usage_aggregated AS su
+JOIN staging.purchases AS p ON p.id = su.purchase_id -- Pour avoir le offer config id
+-- !!! Later : code pour eviter qu'un achat deja existant se charge plusieurs fois sinon la ligne precedente pose probleme dans le cas ou un ameme chat est charge plusieurs fois dans le staging: dans un tel cas toutes les lignes de cet achat seront joint
+JOIN staging.subscriptions AS s ON s.id = su.subscription_id -- Pour avoir le customer id
 JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id -- Pour avoir la version de client ayant consommé le service
                             AND dc.valid_from <= usage_date
                             AND dc.valid_to > usage_date
-JOIN staging.purchases AS p ON p.id = su.purchase_id
 ),
-consumption_daily_events_agg_ranked AS(
-SELECT purchase_id, date_key, customer_key, offer_config_id,
-SUM(call_duration_seconds) OVER(w) AS call_duration_seconds,
-SUM(sms_sent_count) OVER(w) AS sms_sent_count,
-SUM(data_used_mb) OVER(w) AS data_used_mb,
-ROW_NUMBER() OVER (w) AS rn
-FROM consumption_daily_events
-WINDOW w AS (PARTITION BY purchase_id, date_key)
+service_consumption AS(
+SELECT purchase_id,
+TO_CHAR(usage_date, 'YYYYMMDD')::INT AS date_key,
+customer_key,
+offer_config_id,
+COALESCE(call_duration_seconds, 0) AS call_duration_seconds, -- Use COALESCE to handle cases there is no use of a specific service for the aggregation (which result in NULL value)
+COALESCE(sms_sent_count, 0) AS sms_sent_count,
+COALESCE(data_used_mb, 0.0) AS data_used_mb
+FROM service_usage_aggregated_enriched
 )
-SELECT purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb
-FROM consumption_daily_events_agg_ranked
-WHERE rn = 1
+SELECT * FROM service_consumption
 ON CONFLICT (purchase_id, date_key)
 DO UPDATE SET call_duration_seconds = dw.fact_consumption.call_duration_seconds + EXCLUDED.call_duration_seconds,
               sms_sent_count = dw.fact_consumption.sms_sent_count + EXCLUDED.sms_sent_count,
