@@ -54,16 +54,25 @@ def mark_batch_as_failed(batch_id, error_message):
         query = f"""
         UPDATE {BATCH_LOGS_TABLE}
         SET {BATCH_STATUS_COL} = %s,
-            {BATCH_ERROR_MESSAGE_COL} = %s,
+            {BATCH_ERROR_MESSAGE_COL} = CONCAT_WS(%s::TEXT, {BATCH_ERROR_MESSAGE_COL}, %s::TEXT),
             {FINISHED_AT} = CURRENT_TIMESTAMP
-        WHERE {BATCH_ID_COL} = {batch_id};
+        WHERE {BATCH_ID_COL} = %s;
         """
         print(query)
         with connection.cursor() as cursor:
                 cursor.execute(
-                    query, ('FAILED', error_message,)    
+                    query, 
+                    (
+                            'FAILED',
+                             ' && ',
+                               error_message,
+                               batch_id)    
                 )
                 # finished_at = cursor.fetchone()[0]
                 connection.commit()
                 # return finished_at
 
+if __name__ == "__main__":
+        batch_id = 20
+        error_message = "An errror occured"
+        mark_batch_as_failed(batch_id, error_message)

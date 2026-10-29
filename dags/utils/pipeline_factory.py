@@ -23,25 +23,21 @@ SOURCE_NAMES = SOURCE_NAMES[:-1]
 def mark_batch_failed(context):
         task_instance = context["task_instance"]
         task_id = task_instance.task_id
-        batch_info = task_instance.xcom_pull(task_ids="start_batch")
+        try_num = task_instance.try_number
+        print(try_num)
+        batch_id = task_instance.xcom_pull(task_ids="start_batch")
         print("*********")
-        print(batch_info)
+        print(batch_id)
         print("*********")
-        if batch_info:
+        if batch_id:
+                print("The batch is going to be marked as failed")
 
                 mark_batch_as_failed(
-                        batch_id=batch_info["batch_id"],
+                        batch_id=batch_id,
                         error_message=f"Task '{task_id}' failed: "
                                       f"{context.get('exception', 'Unkown error')}"
                 )
 
-
-"""with DAG(
-        dag_id="initial_pipeline_dag",
-        description="This DAG runs data pipeline for inital data extraction, quality checks, and loading processes.",
-
-):pass"""
-        
 
 def build_pipeline(dag, incremental:bool=False):
     start_batch_task = PythonOperator(
@@ -81,7 +77,7 @@ def build_pipeline(dag, incremental:bool=False):
     "table_name":"offers",
     "extraction_cut_off_date":extraction_cut_off_date
         },
-                on_failure_callback=mark_batch_failed,
+                # on_failure_callback=mark_batch_failed,
                 dag=dag
         )
     extract_billings_task = PythonOperator(
@@ -94,7 +90,7 @@ def build_pipeline(dag, incremental:bool=False):
                 "table_name":"offer_billings",
                 "extraction_cut_off_date":extraction_cut_off_date
         },
-                on_failure_callback=mark_batch_failed,
+                # on_failure_callback=mark_batch_failed,
                 dag=dag
         )
 
