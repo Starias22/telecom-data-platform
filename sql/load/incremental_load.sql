@@ -168,7 +168,7 @@ SELECT * , timestamp::DATE AS usage_date FROM service_usage_deduplicated
 consumption_daily_events AS(
 SELECT purchase_id, TO_CHAR(usage_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, call_seconds AS call_duration_seconds, sms_count AS sms_sent_count, data_mb AS data_used_mb
 FROM service_usage AS su
-JOIN staging.subscriptions AS s ON s.id = su.purchase_id
+JOIN staging.subscriptions AS s ON s.id = su.subscription_id
 JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id -- Pour avoir la version de client ayant consommé le service
                             AND dc.valid_from <= usage_date
                             AND dc.valid_to > usage_date
