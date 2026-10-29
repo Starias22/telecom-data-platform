@@ -1,7 +1,10 @@
 from datetime import datetime
+import json
 from pathlib import Path
 
-from config.config import OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE,START_DATE_COL, END_DATE_COL, CUSTOMERS_TABLE
+from kafka import KafkaProducer
+
+from config.config import KAFKA_SERVERS, KAFKA_TOPIC, OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE,START_DATE_COL, END_DATE_COL, CUSTOMERS_TABLE
 from config.config import BUNDLE
 from  src.utils.db_connector import get_connection
 from src.utils.utils import fmt_datetime
@@ -31,14 +34,150 @@ SUBSCRIPTION_ID_COL = "subscription_id"
 PURCHASED_AT_COL = "purchased_at"
 PURCHASE_CHANNEL_COL = "purchase_channel"
 PAYMENT_METHOD_COL =  "payment_method"
+PURCHASE_ID_COL = "purchase_id"
+TIMESTAMP_COL = "timestamp"
+SERVICE_TYPE_COL = "service_type"
+DATA_MB_COL = "data_mb"
+CALL_SECONDS_COL = "call_seconds"
+SMS_COUNT_COL = "sms_count"
 PURCHASE_DATA_DIR = "/home/starias/myprojects/telecom-offer-performance-analytics-platform/data/purchases"
-
+SEED = 1
 
 
 
 
 import pandas as pd
 
+
+import numpy as np
+import pandas as pd
+
+
+def generate_usage_events_for_purchase(
+    purchase_id=10_000_000,
+    subscription_id=9,
+    purchased_at="2026-10-28 17:52:34",
+    value_xof=1666,
+    xof_per_mb=1,
+    xof_per_sec=2,
+    xof_per_sms=2,
+    validity_days=7,
+    seed=SEED
+):
+    rng = np.random.default_rng(seed)
+
+    purchased_at = pd.Timestamp(purchased_at)
+    validity_end = purchased_at + pd.Timedelta(days=validity_days)
+
+    # Répartition aléatoire du prix entre DATA, VOICE et SMS.
+    # À remplacer par les quotas réels si ceux-ci sont disponibles.
+    allocations = rng.multinomial(100, [0.50, 0.30, 0.20])
+
+    data_budget = value_xof * allocations[0] // 100
+    voice_budget = value_xof * allocations[1] // 100
+    sms_budget = value_xof - data_budget - voice_budget
+
+    # Volumes maximaux estimés à partir des tarifs unitaires.
+    max_data_mb = int(data_budget // xof_per_mb)
+    max_call_seconds = int(voice_budget // xof_per_sec)
+    max_sms_count = int(sms_budget // xof_per_sms)
+
+    # Le client ne consomme qu'une fraction de chaque volume disponible.
+    data_usage_pct = rng.uniform(0.20, 0.90)
+    voice_usage_pct = rng.uniform(0.20, 0.90)
+    sms_usage_pct = rng.uniform(0.20, 0.90)
+
+    consumed_data_mb = int(max_data_mb * data_usage_pct)
+    consumed_call_seconds = int(max_call_seconds * voice_usage_pct)
+    consumed_sms_count = int(max_sms_count * sms_usage_pct)
+
+    def distribute_quantity(total_quantity, max_events=10):
+        """Répartit une quantité consommée entre plusieurs événements."""
+        if total_quantity <= 0:
+            return []
+
+        n_events = int(rng.integers(1, min(max_events, total_quantity) + 1))
+
+        # Chaque événement reçoit au moins une unité.
+        quantities = (
+            rng.multinomial(
+                total_quantity - n_events,
+                np.ones(n_events) / n_events
+            ) + 1
+        )
+
+        return quantities.tolist()
+
+    events = []
+
+    service_usage = [
+        ("DATA", consumed_data_mb, DATA_MB_COL),
+        ("CALL", consumed_call_seconds, CALL_SECONDS_COL),
+        ("SMS", consumed_sms_count, SMS_COUNT_COL),
+    ]
+    event_id = 50_000_000
+
+    for service_type, total_quantity, quantity_field in service_usage:
+        quantities = distribute_quantity(total_quantity)
+
+        for quantity in quantities:
+            # Date aléatoire comprise dans la période de validité.
+            elapsed_seconds = rng.integers(
+                0,
+                max(1, int((validity_end - purchased_at).total_seconds()))
+            )
+
+            event_time = purchased_at + pd.Timedelta(
+                seconds=int(elapsed_seconds)
+            )
+
+            event = {
+                ID_COL:event_id,
+                PURCHASE_ID_COL: purchase_id,
+                SUBSCRIPTION_ID_COL:subscription_id,
+                TIMESTAMP_COL: datetime.fromtimestamp(event_time.timestamp()).isoformat(),
+                SERVICE_TYPE_COL: service_type,
+                DATA_MB_COL: 0,
+                CALL_SECONDS_COL: 0,
+                SMS_COUNT_COL: 0,
+            }
+
+            event[quantity_field] = quantity
+            event = {key:value for key, value in event.items() if value !=0 }
+            events.append(event)
+            event_id += 1
+
+    # Trier les evenements par timestamp
+    events.sort(key=lambda event:event[TIMESTAMP_COL])
+    print(events)
+
+    return events
+
+def produce_usage_events(events):
+     producer = KafkaProducer(
+          bootstrap_servers = KAFKA_SERVERS,
+          key_serializer=lambda key:str(key).encode("utf-8"),
+          value_serializer=lambda value:json.dumps(value).encode("utf-8")
+        )     
+     
+     """events =  [
+                {k:v for k, v in record.items() if pd.notna(v)} for record in events
+        ]"""
+     for record in events:
+        print(record)
+        producer.send(
+                        KAFKA_TOPIC,
+                        key = record[SUBSCRIPTION_ID_COL],
+                        value=record)
+     producer.flush()
+
+def get_test_service_usage_batches():
+        events = generate_usage_events_for_purchase()
+        firt_batch_events = events[:5]
+        second_batch_events = events[5:10]
+        third_batch_events = events[10:]
+        return firt_batch_events, second_batch_events, third_batch_events
+        
 
 def create_new_customer(connection, id, city ="Covè", customer_type=INDIVIDUAL, gender="M",  customer_segment=YOUTH, birthdate="2002-06-13"):
         
@@ -301,8 +440,12 @@ def test_purchase_an_offer():
      # SELECT dc.customer_id, s.id AS subscription_id  FROM dw.dim_customer AS dc JOIN staging.subscriptions AS s ON s.customer_id = dc.customer_id WHERE customer_key = 1189472 -- Verifier que ca correspond effecivement au bon customer
 
     
-    
 
+    
+    
+def test_usage_events_accross_multiple_days(batch_1):
+     produce_usage_events(batch_1)
+     
       
 if __name__ == "__main__":
         
@@ -320,8 +463,20 @@ if __name__ == "__main__":
         test_update_customer_scd2_attribute(connection) # Passed  
 
         test_update_customer_scd1_attribute(connection) # Passed
-        """  
         test_purchase_an_offer() # Passed
+        """  
+        b1, b2, b3 = get_test_service_usage_batches()
+
+        print("Batch 1")
+        print(pd.DataFrame(b1))
+        test_usage_events_accross_multiple_days(b1) # Passed
+
+        """print("Batch 2")
+        print(pd.DataFrame(b2))
+
+        print("Batch 3")
+        print(pd.DataFrame(b3))"""
+        
         
 
 
