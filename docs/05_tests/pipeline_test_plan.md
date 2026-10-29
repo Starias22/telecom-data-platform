@@ -14,13 +14,13 @@ T10 | Update an SCD 2 attribute of a customer | Two versions of customers now av
 T11 | Update an SCD 1 attribute of a customer (preferly the one of the previous test, so prerelery permor this test without rolling back the previous one) | The attribute updated in dim_customer for all versions of the concerned customer | Passed |
 T12 | Purchase of an offer by a customer | Purchase loaded into purchase fact table with correct attributes | Passed |
 T13 | New service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes, without error and without double count | Passed |
-T14 | New service usage events with some with existing records for the same (date, purchase) in the consumption fact table | Service consumption values aggregated to their matching (date, purchase) in the consumption fact table | To be tested |
+T14 | New service usage events including events with already existing record of (purchase, date) in the consumption fact table | Service usage indicator values aggregated and added to the aggregated value of their corresponding (purchase, date) in the consumption fact table | Passed |
 T15 | Temporary failure of a task | Retry working | To be tested |
 T16 | Replay of the same batch | No duplicate | To be tested |
 T17 | Failure during load | Reprise corecte | To be tested |
 T18 | Failure of the pipeline | Coherent watermark | To be tested |
 T19 | Restart Kafka consumer (service usage extractor) or any other extractor | Reprise Correct pour lextractor conerne | To be tested |
-T20 | Failure after partial processing | Une reprise correcte sans perte de donne , sans erreur et sans double comptabilisation | To be tested |
+T20 | Failure after partial processing | Une reprise correcte sans perte/rater de de donne , sans erreur et sans double comptabilisation | To be tested |
 T21 | Data quality issues from source systems | Correctly handle the issue | To be tested |
 error handling
 logs

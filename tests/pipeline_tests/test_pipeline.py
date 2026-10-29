@@ -53,10 +53,12 @@ import numpy as np
 import pandas as pd
 
 
+purchased_at = "2026-10-28 17:52:34"
+
 def generate_usage_events_for_purchase(
     purchase_id=10_000_000,
     subscription_id=9,
-    purchased_at="2026-10-28 17:52:34",
+    purchased_at=purchased_at,
     value_xof=1666,
     xof_per_mb=1,
     xof_per_sec=2,
@@ -115,7 +117,7 @@ def generate_usage_events_for_purchase(
         ("CALL", consumed_call_seconds, CALL_SECONDS_COL),
         ("SMS", consumed_sms_count, SMS_COUNT_COL),
     ]
-    event_id = 50_000_000
+    event_id = 10_000_000
 
     for service_type, total_quantity, quantity_field in service_usage:
         quantities = distribute_quantity(total_quantity)
@@ -416,8 +418,8 @@ def test_purchase_an_offer():
      purchase_id = 10_000_000
      subscription_id = 9
      ofer_config_id = 97
-     purchased_at = "2026-10-20 15:45:18"
-     purchased_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+     purchased_at = "2026-10-28 17:52:34"
+     # purchased_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
      purchase_channel = USSD
      payment_method = AIRTIME
      purchase_df = pd.DataFrame({
@@ -463,20 +465,47 @@ if __name__ == "__main__":
         test_update_customer_scd2_attribute(connection) # Passed  
 
         test_update_customer_scd1_attribute(connection) # Passed
+        
+        # Set the water mark to a date < the purchase date used for the test
         test_purchase_an_offer() # Passed
-        """  
+
         b1, b2, b3 = get_test_service_usage_batches()
 
         print("Batch 1")
         print(pd.DataFrame(b1))
         test_usage_events_accross_multiple_days(b1) # Passed
+        # SELECT * FROM dw.fact_consumption WHERE purchase_id = 10000000;
+        """  
+        
 
-        """print("Batch 2")
+        b1, b2, b3 = get_test_service_usage_batches()
+
+        print("Batch 1")
+        print(pd.DataFrame(b1))
+        
+
+        print("Batch 2")
         print(pd.DataFrame(b2))
 
         print("Batch 3")
-        print(pd.DataFrame(b3))"""
+        print(pd.DataFrame(b3))
+
+        # Now that test_usage_events_accross_multiple_days is passed
+        # Will will produce batch 2 and batch 3 seperetely
+        # Batch 2 and 3 have some days in common
+        # The expected result is that the service usage indicator caluclated for a giving day for the purchase during the new batch 3 will be added to the one calculated for the previous batches (here batch 2)
+        # test_usage_events_accross_multiple_days(b2) # Run this and then run the incremental pipeline dag
+        # After running the dag check if ... correctly loaded into the dw
+        # SELECT * FROM dw.fact_consumption WHERE purchase_id = 10000000;
+
+        # Then comment the previous code fr batch b2 and produce new consumption events by running this
+        test_usage_events_accross_multiple_days(b3) # Passed
         
+        # Then run the pipeline again
+
+        # And then check
+        # SELECT * FROM dw.fact_consumption WHERE purchase_id = 10000000;
+
         
 
 
