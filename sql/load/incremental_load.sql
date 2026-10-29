@@ -185,6 +185,10 @@ WINDOW w AS (PARTITION BY purchase_id, date_key)
 )
 SELECT purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb
 FROM consumption_daily_events_agg_ranked
-WHERE rn = 1;
+WHERE rn = 1
+ON CONFLICT (purchase_id, date_key)
+DO UPDATE SET call_duration_seconds = dw.fact_consumption.call_duration_seconds + EXCLUDED.call_duration_seconds,
+              sms_sent_count = dw.fact_consumption.sms_sent_count + EXCLUDED.sms_sent_count,
+              data_used_mb = dw.fact_consumption.data_used_mb + EXCLUDED.data_used_mb;
 
 
