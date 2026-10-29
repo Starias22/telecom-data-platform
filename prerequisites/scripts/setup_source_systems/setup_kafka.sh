@@ -22,8 +22,8 @@ ls kafka
 
 sleep 5
 
-./kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092- -delete --topic TelecomUsage 2>/dev/null || true
-/kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092- -delete --topic __consumer_offsets 2>/dev/null || true
+./kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092 --delete --topic TelecomUsage 2>/dev/null || true
+/kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092 --delete --topic __consumer_offsets 2>/dev/null || true
  
 
 ./kafka/bin/kafka-topics.sh --create --topic TelecomUsage --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
@@ -33,3 +33,8 @@ sleep 5
 ./kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092 --list
 ./kafka/bin/kafka-topics.sh --describe --topic TelecomUsage --bootstrap-server localhost:9092
 
+# ./kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic TelecomUsage --from-beginning
+
+# ./kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092 --delete --topic TelecomUsage
+# /kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092 --delete --topic __consumer_offsets
+ 
