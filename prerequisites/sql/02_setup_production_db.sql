@@ -56,7 +56,7 @@ CREATE TABLE crm.customers(
         customer_segment VARCHAR(10),
         birthdate DATE,
         registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        status VARCHAR(10),
+        status VARCHAR(10) DEFAULT 'ACTIVE',
         termination_date TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
