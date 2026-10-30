@@ -1,3 +1,5 @@
+BEGIN;
+
 -- !!! Later : code pour eviter qu'un achat deja existant se charge plusieurs fois
 CREATE TEMP TABLE current_batch_offers AS(
 SELECT * FROM staging.offers WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
@@ -207,3 +209,4 @@ DO UPDATE SET call_duration_seconds = dw.fact_consumption.call_duration_seconds 
               data_used_mb = dw.fact_consumption.data_used_mb + EXCLUDED.data_used_mb;
 
 
+COMMIT;

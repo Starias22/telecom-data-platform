@@ -17,11 +17,27 @@ def load(incremental=True, batch_id=None):
                         "-h", HOST,
                         "-U", USER,
                         "-d", DATA_PLATFORM_DB,
-                        "-f", INCREMENTAL_LOAD_SQL_FILE_PATH if incremental else INITIAL_LOAD_SQL_FILE_PATH
+                        "-f", INCREMENTAL_LOAD_SQL_FILE_PATH if incremental else INITIAL_LOAD_SQL_FILE_PATH,
+                        "-v", "ON_ERROR_STOP=1" # Pour que la commande lance une exception CalledProcessError en cas d eprobleme / erreur
+
                 ]
+                
         
         command.extend(["-v", f"batch_id={batch_id}"] if batch_id is not None else [])
-        subprocess.run(command, env=env)
+        print(command)
+        
+        try:
+               subprocess.run(
+                command,
+                env=env,
+                capture_output=True,
+                text=True,
+                check=True
+                )
+        except subprocess.CalledProcessError as e:
+                print(e.stdout)
+                error_message = e.stderr
+                raise RuntimeError(error_message) from e
         
 if __name__ ==  "__main__":
         load(incremental=False)

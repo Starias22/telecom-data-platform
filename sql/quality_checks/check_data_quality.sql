@@ -1,3 +1,5 @@
+BEGIN;
+
 -- !!! Cest auoi lq difference entre chqrlength et length
 -- !!!avoid duplicates ... batch
 -- !!! Suquery vs JOIN  quand faire quoi
@@ -227,5 +229,4 @@ SELECT DISTINCT issue_type, issue_code FROM data_quality.issues WHERE batch_id =
 
 -- !!!Queries to calculte count and statistics for each type/code of issue (the number of rows concerned)
 
-
-
+COMMIT;

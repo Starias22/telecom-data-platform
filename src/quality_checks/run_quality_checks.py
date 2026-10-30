@@ -10,17 +10,30 @@ load_dotenv(ENV_FILE_PATH)
 env = os.environ.copy()
 
 def check_quality(batch_id=1):
-        subprocess.run(
+        try:
+            result = subprocess.run(
                 [
                         "psql",
                         "-h", HOST,
                         "-U", USER,
                         "-d", DATA_PLATFORM_DB,
                         "-f", SQL_QUALITY_CHECKS_FILE_PATH,
-                        "-v", f"batch_id={batch_id}"
+                        "-v", f"batch_id={batch_id}",
+                        "-v", "ON_ERROR_STOP=1" # Pour que la commande lance une exception CalledProcessError en cas d eprobleme / erreur
                 ],
-                env=env
+                env=env,
+                capture_output=True,
+                text=True,
+                check=True
         )
+        except subprocess.CalledProcessError as e:
+            print(e.stdout)
+            error_message = e.stderr           
+            print(error_message)
+
+            raise RuntimeError(error_message) from e # Relancer ie propage rlerreur
+            
+        
         
 if __name__ ==  "__main__":
         check_quality()
