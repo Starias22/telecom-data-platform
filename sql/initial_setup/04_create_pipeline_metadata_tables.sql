@@ -1,9 +1,11 @@
 CREATE TABLE IF NOT EXISTS pipeline_metadata.batch_logs(
         batch_id SERIAL PRIMARY KEY, -- Bigint?
-        started_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        finished_at TIMESTAMPTZ,
+        batch_type VARCHAR(20) NOT NULL,
+        started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMPTZ,
         status VARCHAR(10) CHECK (status IN ('RUNNING', 'SUCCESS','FAILED', 'INTERUPTED')),
-        error_message TEXT
+        error_message TEXT,
+        CHECK(batch_type IN ('INITIAL', 'INCREMENTAL'))
 
 );
 
