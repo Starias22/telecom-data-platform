@@ -17,9 +17,8 @@ T13 | New service usage events for a purchased offer accrosss multiple days | Ev
 T14 | New service usage events including events with already existing record of (purchase, date) in the consumption fact table | Service usage indicator values aggregated and added to the aggregated value of their corresponding (purchase, date) in the consumption fact table | Passed |
 T15 | Temporary failure of one or many tasks (test for every task) | Retry working for the task(s) | Passed |
 T16 | Definitive failure of one or many tasks (test for every task) | Batch marked as failed with tracable error meesage in batch logs table  | Passed |
-T17 | Replay of the same batch | No duplicate | To be tested |
-T18 | Restart a failed task, potentially after partial processing (test for every task) | Reprise Correct de la tache concernee sans eereur, sans doublon sans perte/rater de donne , sans erreur et sans double comptabilisation | To be tested |
-T19 | Data quality issues from source systems | Correctly handle the issue | To be tested |
+T17 | Restart a  task that (definetly) failed, potentially after partial processing (test for every task) | Reprise Correcte de la tache concernee sans erreur, sans perte  de donnees (ie rans rater de donnée), sans double comptabilisation | Passed |
+T18 | Data quality issues from source systems | Correctly handle the issue | To be tested |
 
 
 error handling
