@@ -84,29 +84,34 @@ WITH service_usage_deduplicated AS(
         SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id
     )   
 ),
+x AS (
+SELECT purchase_id, subscription_id, TO_CHAR(timestamp::DATE, 'YYYYMMDD')::INT AS date_key, call_seconds, sms_count, data_mb
+FROM service_usage_deduplicated
+),
+customer_purchase_consumption_daily_events_aggregated AS (
+SELECT purchase_id, subscription_id,date_key,
+SUM(call_seconds) OVER(w) AS call_duration_seconds,
+SUM(sms_count) OVER(w) AS sms_sent_count,
+SUM(data_mb) OVER(w) AS data_used_mb,
+ROW_NUMBER() OVER (w) AS rn
+FROM x
+WINDOW w AS (PARTITION BY purchase_id, date_key )
+),
+y AS(
+SELECT purchase_id, subscription_id, date_key, call_duration_seconds, sms_sent_count, data_used_mb
+FROM customer_purchase_consumption_daily_events_aggregated WHERE rn = 1
+),
 consumption_details AS (
-SELECT su.id, purchase_id, timestamp::DATE AS consumption_date, customer_key, s.customer_id, dc.valid_from, dc.valid_to, offer_config_id, call_seconds AS call_duration_seconds, sms_count AS sms_sent_count, data_mb AS data_used_mb
-FROM service_usage_deduplicated AS su
+SELECT purchase_id, date_key, customer_key, offer_config_id,
+COALESCE(call_duration_seconds, 0),
+COALESCE(sms_sent_count, 0),
+COALESCE(data_used_mb, 0.0)
+FROM y AS su
 JOIN staging.purchases AS p ON p.id = su.purchase_id
 JOIN staging.subscriptions AS s ON s.id = su.subscription_id
 JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id
-),
-customer_purchase_consumption_daily_events AS (
-SELECT purchase_id, TO_CHAR(consumption_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb  FROM consumption_details
-),
-customer_purchase_consumption_daily_events_aggregated AS (
-SELECT purchase_id, date_key, customer_key, offer_config_id,
-SUM(call_duration_seconds) OVER(w) AS call_duration_seconds,
-SUM(sms_sent_count) OVER(w) AS sms_sent_count,
-SUM(data_used_mb) OVER(w) AS data_used_mb,
-ROW_NUMBER() OVER (w) AS rn
-FROM customer_purchase_consumption_daily_events
-WINDOW w AS (PARTITION BY purchase_id, date_key )
 )
-SELECT purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb
-FROM customer_purchase_consumption_daily_events_aggregated
-WHERE rn = 1;
-
+SELECT * FROM consumption_details;
 
 
 WITH service_usage_deduplicated AS(
