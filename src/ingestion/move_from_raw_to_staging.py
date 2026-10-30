@@ -21,26 +21,10 @@ def move_to_staging(staging_raw_data_dir):
                 # query = f"""copy ( SELECT * FROM {table} WHERE {insert_date} BETWEEN '{extraction_start_date}' AND '{extraction_end_date}' OR {last_update_date} BETWEEN '{extraction_start_date}' AND '{extraction_end_date}') To STDOUT WITH (FORMAT CSV, HEADER TRUE);"""
 
                 queries.append(query)
-
-        
-        
-        """\\copy {table} FROM {file_path} WITH (FORMAT CSV, HEADER TRUE)
-        
-        columns_to_insert = "(purchase_id, subscription_id, timestamp, service_type, data_mb, sms_count, call_seconds, message_partition, message_offset, batch_id) FROM
-        x,y = queries[-1].split("FROM", 1)
-        queries[-1] = x + columns_to_insert + y"""
-
-       
-        
-        
-        
-
        
         if len(queries) == 0:
                 print("No data moved to staging cause no data extracted from any sources")
                 return
-        
-        
 
         i = STAGING_PARAMS["services_usage"]
         table = i["table"]
@@ -49,9 +33,11 @@ def move_to_staging(staging_raw_data_dir):
                 temp_table = "tmp_service_usage"
                 columns = "purchase_id, subscription_id, timestamp, service_type, data_mb, sms_count, call_seconds, message_partition, message_offset, batch_id"
                 query = f"""
+                BEGIN;
                 CREATE TEMP TABLE {temp_table} AS SELECT {columns} FROM {table} WITH NO DATA ;
                 \\copy {temp_table} FROM {file_path} WITH (FORMAT CSV, HEADER TRUE);
                 INSERT INTO {table} ({columns}) SELECT * FROM {temp_table} ON CONFLICT (message_partition, message_offset) DO NOTHING;
+                COMMIT;
                 """
                 print(query)
                 queries[-1] = query # Replace last query
@@ -72,10 +58,14 @@ def move_to_staging(staging_raw_data_dir):
         # exit()
         
 
-        result = subprocess.run(command, input=query, capture_output=True, text=True)
+        try:
+               subprocess.run(command, input=query, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+                error_message = e.stderr
+                print(error_message)
+                raise RuntimeError(error_message) from e
         # !!!later :  ahndle errors and get th eouptut to ... the number of records extracted CompletedProcess(args=['psql', '-U', 'starias22', '-h', 'localhost', '-d', 'ben_telecom'], returncode=0, stdout='COPY 28\nCOPY 15\nCOPY 0\nCOPY 5000000\nCOPY 5928704\n', stderr='')
         # !!!Handle it so that the password wll not be prompted fro the command line
-        print(result)
 
 
         return
