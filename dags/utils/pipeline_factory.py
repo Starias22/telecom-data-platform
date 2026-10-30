@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from airflow import DAG
@@ -17,6 +17,11 @@ from src.quality_checks.run_quality_checks import check_quality
 from src.load.load_to_dw import load
 from src.utils.batch_manager import start_batch, complete_batch, mark_batch_as_failed
 from src.utils.watermark_manager import get_last_watermark, update_watermark
+
+DEFAULT_ARGS = {
+        "retries":2,
+        "retry_delay":timedelta(seconds=10)
+}
 
 SOURCE_NAMES = SOURCE_NAMES[:-1]
 
@@ -43,6 +48,7 @@ def build_pipeline(dag, incremental:bool=False):
     start_batch_task = PythonOperator(
                 task_id="start_batch",
                 python_callable=start_batch,
+                op_kwargs={"incremental":incremental},
                 dag=dag           
                 
         )
