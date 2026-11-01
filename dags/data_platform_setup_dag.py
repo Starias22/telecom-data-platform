@@ -24,7 +24,7 @@ def setup_data_platform():
 
 
 with DAG(
-        dag_id="data_platform_setup_dag",
+        dag_id="data_platform_setup",
         description="This DAG simply setup the data platform by creating all neccessary schemas and tables for cities reference, pipeline metadata, staging, data quality, and the datawarehouse",
         default_args=DEFAULT_ARGS
 
