@@ -273,6 +273,18 @@ def update_customer_scd1_attribute(connection, customer_id, new_gender):
                        (new_gender, customer_id) )
         connection.commit()
 
+def update_subscription_scd1_attribute(connection, subscription_id, termination_date):
+    query = f"""
+        UPDATE {SUBSCRIPTIONS_TABLE}
+        SET {TERMINATION_DATE_COL} = %s
+        WHERE {ID_COL} = %s;
+        """
+    print(query)
+    with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (termination_date, subscription_id) )
+        connection.commit()
+
 def update_customer_scd2_attribute(connection, customer_id, new_city):
     query = f"""
         UPDATE {CUSTOMERS_TABLE}
@@ -371,6 +383,13 @@ def test_update_customer_scd1_attribute(connection):
   # SELECT * FROM dw.dim_customer WHERE customer_id = 7;
 
 
+def test_update_subscription_scd1_attribute(connection):
+  subscription_id = 9
+  termination_date = "2026-11-01 18:15:13"
+  roll_back_to_original_state_before_test_subscription_scd1_attribute(connection=connection, subscription_id=subscription_id)
+  update_subscription_scd1_attribute(connection, subscription_id, termination_date=termination_date)
+  
+
 def test_update_customer_scd2_attribute(connection):
   customer_id = 7
   old_city = "Djougou"
@@ -429,6 +448,18 @@ def roll_back_to_original_state_before_test_customer_scd1_attribute(connection, 
       with connection.cursor() as cursor:
         cursor.execute(query,
                        (old_gender, customer_id) )
+        connection.commit()
+
+def roll_back_to_original_state_before_test_subscription_scd1_attribute(connection, subscription_id):
+      query = f"""
+        UPDATE {SUBSCRIPTIONS_TABLE}
+        SET {TERMINATION_DATE_COL} = NULL
+        WHERE {ID_COL} = %s;
+        """
+      print(query)
+      with connection.cursor() as cursor:
+        cursor.execute(query,
+                       (subscription_id,) )
         connection.commit()
 
 def test_update_offer_config(connection):
@@ -545,12 +576,17 @@ if __name__ == "__main__":
 
         
         """get_new_offer_created(connection, id=offer_id)
-        get_new_offer_config_created(connection, id=offer_config_id)"""
+        get_new_offer_config_created(connection, id=offer_config_id)
 
         test_add_new_subscription(connection=connection) # Passed
         # Then run the incremental pipeline dag
         # Then chek if loaded
         # SELECT * FROM dw.dim_subscription WHERE subscription_id = 10000000;
+        """
+
+        test_update_subscription_scd1_attribute(connection) # Passed
+        # SELECT * FROM subscriptions.subscriptions WHERE id = 9;
+        # SELECT * FROM dw.dim_subscription WHERE subscription_id = 9;
 
         
         

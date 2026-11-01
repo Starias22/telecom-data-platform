@@ -13,7 +13,7 @@ T09 | Creation of a new customer | One version of new customer loaded into dim_c
 T10 | Update an SCD 2 attribute of a customer | Two versions of customers now available in dim_customer, all with correct attributes (the previous one closed and the new one current with the new value of the updated attribute) | Passed
 T11 | Update an SCD 1 attribute of a customer (preferly the one of the previous test, so perform this test without rolling back the previous one) | The attribute updated in dim_customer for all versions of the concerned customer | Passed |
 T12 | Creation of a new subscription | Subscription loaded into dim_subscription with correct attributes | Passed |
-T13 | Update an SCD 1 attribute of a subsciption (for example registration date or termination date) | The attribute updated in dim_subscription for the concerned subscription | To be tested |
+T13 | Update an SCD 1 attribute of a subsciption (for example registration date or termination date) | The attribute updated in dim_subscription for the concerned subscription | Passed |
 T14 | Purchase of an offer by a customer | Purchase loaded into purchase fact table with correct attributes | Passed |
 T15 | New service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes, without error and without double count | Passed |
 T16 | New service usage events including events with already existing record of (purchase, date) in the consumption fact table | Service usage indicator values aggregated and added to the aggregated value of their corresponding (purchase, date) in the consumption fact table | Passed |
