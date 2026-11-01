@@ -11,15 +11,16 @@ T07 | Update the name of an offer (which is a SCD 1 attribute in dim_offer) | of
 T08 | Update the end date of an offer configuration (which is a SCD 1 attribute in dim_offer) | offer end date updated to that new end date for the concerned record of offer configuration in dim_offer | Passed |
 T09 | Creation of a new customer | One version of new customer loaded into dim_customer with correct attributes | Passed |
 T10 | Update an SCD 2 attribute of a customer | Two versions of customers now available in dim_customer, all with correct attributes (the previous one closed and the new one current with the new value of the updated attribute) | Passed
-T11 | Update an SCD 1 attribute of a customer (preferly the one of the previous test, so prerelery permor this test without rolling back the previous one) | The attribute updated in dim_customer for all versions of the concerned customer | Passed |
-T12 | Update an SCD 1 attribute of a subsciption (for example registration date or termination date) | The attribute updated in dim_subscription for the concerned subscription | To be tested |
-T13 | Purchase of an offer by a customer | Purchase loaded into purchase fact table with correct attributes | Passed |
-T14 | New service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes, without error and without double count | Passed |
-T15 | New service usage events including events with already existing record of (purchase, date) in the consumption fact table | Service usage indicator values aggregated and added to the aggregated value of their corresponding (purchase, date) in the consumption fact table | Passed |
-T16 | Temporary failure of one or many tasks (test for every task) | Retry working for the task(s) | Passed |
-T17 | Definitive failure of one or many tasks (test for every task) | Batch marked as failed with tracable error meesage in batch logs table  | Passed |
-T18 | Restart a  task that (definetly) failed, potentially after partial processing (test for every task) | Reprise Correcte de la tache concernee sans erreur, sans perte  de donnees (ie rans rater de donnée), sans double comptabilisation | Passed |
-T19 | Data quality issues from source systems | Correctly handle the issue | To be tested |
+T11 | Update an SCD 1 attribute of a customer (preferly the one of the previous test, so perform this test without rolling back the previous one) | The attribute updated in dim_customer for all versions of the concerned customer | Passed |
+T12 | Creation of a new subscription | Subscription loaded into dim_subscription with correct attributes | To be tested |
+T13 | Update an SCD 1 attribute of a subsciption (for example registration date or termination date) | The attribute updated in dim_subscription for the concerned subscription | To be tested |
+T14 | Purchase of an offer by a customer | Purchase loaded into purchase fact table with correct attributes | Passed |
+T15 | New service usage events for a purchased offer accrosss multiple days | Events daily aggregated into the consumption fact table, with correct attributes, without error and without double count | Passed |
+T16 | New service usage events including events with already existing record of (purchase, date) in the consumption fact table | Service usage indicator values aggregated and added to the aggregated value of their corresponding (purchase, date) in the consumption fact table | Passed |
+T17 | Temporary failure of one or many tasks (test for every task) | Retry working for the task(s) | Passed |
+T18 | Definitive failure of one or many tasks (test for every task) | Batch marked as failed with tracable error meesage in batch logs table  | Passed |
+T19 | Restart a  task that (definetly) failed, potentially after partial processing (test for every task) | Reprise Correcte de la tache concernee sans erreur, sans perte  de donnees (ie rans rater de donnée), sans double comptabilisation | Passed |
+T20 | Data quality issues from source systems | Correctly handle the issue | To be tested |
 
 
 error handling
