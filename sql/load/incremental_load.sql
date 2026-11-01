@@ -131,6 +131,26 @@ LEFT JOIN dw.dim_customer AS dc -- LEFT JOIN pour ne pas perdre les nouveaux cli
 WHERE dc.customer_id IS NULL; -- Les clients du staging qui nont aucune version courante dans le DW(ie les nouveaux clients et les anciens dont toutes leurs versions courantes vieent juste detre fermee via le UPDATE)
 
 
+-- Dim subscription
+-- 1. Update in the dw all records of subscription having change for at least one SCD 1 attribute
+UPDATE dw.dim_subscription AS ds
+SET registration_date = s.registration_date,
+    termination_date = s.termination_date
+FROM current_batch_subscriptions AS s
+WHERE s.id = ds.subscription_id
+      AND (
+            s.registration_date IS DISTINCT FROM ds.registration_date
+            OR s.termination_date IS DISTINCT FROM ds.termination_date
+      );
+
+-- 2. Insert new records of subscriptions (subscriptions that did not exist in the dw)
+INSERT INTO dw.dim_subscription(subscription_id, customer_id, registration_date, termination_date)
+SELECT id, customer_id, registration_date, termination_date
+FROM current_batch_subscriptions AS s
+WHERE NOT EXISTS (
+      SELECT 1 FROM dw.dim_subscription AS ds WHERE ds.subscription_id = s.customer_id
+);
+
 -- Fact purchase
 INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_config_id, revenue)
 WITH x AS (SELECT

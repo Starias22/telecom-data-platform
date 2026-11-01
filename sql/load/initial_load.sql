@@ -59,6 +59,14 @@ SELECT COUNT(*) FROM dw.dim_customer;
 SELECT COUNT(*) FROM staging.customers;
 
 
+-- Dm subscription
+INSERT INTO dw.dim_subscription(subscription_id, customer_id, registration_date, termination_date)
+SELECT id, customer_id, registration_date, termination_date
+FROM staging.subscriptions;
+
+SELECT COUNT(*) FROM dw.dim_subscription;
+SELECT COUNT(*) FROM staging.subscriptions;
+
 
 -- Fact purchase
 INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_config_id, revenue)

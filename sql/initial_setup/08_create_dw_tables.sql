@@ -52,6 +52,13 @@ CREATE TABLE IF NOT EXISTS dw.dim_customer(
         is_current BOOLEAN
         );
 
+CREATE TABLE IF NOT EXISTS dw.dim_subscription(
+        subscription_id INT PRIMARY KEY,   
+        customer_id INT NOT NULL, --- !!! Faut-il faire en sorte que ca referentie customer id dans dim customer? (Mais je pense que non, pour eviter que ce soit snowflake)
+        registration_date TIMESTAMP NOT NULL,
+        termination_date TIMESTAMP
+        );
+
 CREATE TABLE IF NOT EXISTS dw.fact_purchase(
         purchase_id INT PRIMARY KEY, -- !!! Faut-il faire faire FK(purchase_id)  references staging.purchases(id)?
         date_key INT NOT NULL,
