@@ -148,7 +148,7 @@ INSERT INTO dw.dim_subscription(subscription_id, customer_id, registration_date,
 SELECT id, customer_id, registration_date, termination_date
 FROM current_batch_subscriptions AS s
 WHERE NOT EXISTS (
-      SELECT 1 FROM dw.dim_subscription AS ds WHERE ds.subscription_id = s.customer_id
+      SELECT 1 FROM dw.dim_subscription AS ds WHERE ds.subscription_id = s.id
 );
 
 -- Fact purchase
