@@ -4,8 +4,7 @@ from pathlib import Path
 
 from kafka import KafkaProducer
 
-from config.config import KAFKA_SERVERS, KAFKA_TOPIC, OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE,START_DATE_COL, END_DATE_COL, CUSTOMERS_TABLE
-from config.config import BUNDLE
+from config.config import KAFKA_SERVERS, KAFKA_TOPIC, OFFERS_TABLE, TRX_DB_NAME, ID_COL, OFFER_CONFIGS_TABLE,START_DATE_COL, END_DATE_COL, CUSTOMERS_TABLE, SUBSCRIPTIONS_TABLE, BUNDLE
 from  src.utils.db_connector import get_connection
 from src.utils.utils import fmt_datetime
 
@@ -24,6 +23,12 @@ GENDER_COL = "gender"
 CUSTOMER_SEGMENT_COL = "customer_segment"
 BIRTHDATE_COL = "birthdate"
 TERMINATION_DATE_COL = "termination_date"
+PHONE_NUMBER_COL = "phone_number"
+CUSTOMER_ID_COL = "customer_id"
+REGISTRATION_DATE_COL = "registration_date"
+STATUS_COL = "status"
+
+
 INDIVIDUAL = "INDIVIDUAL"
 YOUTH = "YOUTH"
 
@@ -195,6 +200,23 @@ def create_new_customer(connection, id, city ="Covè", customer_type=INDIVIDUAL,
                         )
                 connection.commit()
 
+# SELECT * FROM subscriptions.subscriptions WHERE customer_id = 3160952;
+# SELECT '38538338' NOT IN (SELECT REGEXP_REPLACE(phone_number, '\+?(229)?(01)?', '') FROM subscriptions.subscriptions); -- Ensure the phone number of the subscription I am creating is not assigned to any customer
+def create_new_subscription(connection, subscription_id, customer_id =  3160952, phone_number ="+2290138538338", registration_date="2026-11-01 16:33:10", status="ACTIVE"):
+        
+        query = f"""
+        INSERT INTO {SUBSCRIPTIONS_TABLE} ({ID_COL}, {PHONE_NUMBER_COL}, {CUSTOMER_ID_COL}, {REGISTRATION_DATE_COL}, {STATUS_COL})
+        VALUES (%s, %s, %s, %s, %s);
+        """
+        print(query)
+        with connection.cursor() as cursor:
+                cursor.execute(
+                        query, 
+                        (subscription_id, phone_number, customer_id, registration_date, status)
+                        )
+                connection.commit()
+
+
 def create_new_offer(connection, id, name = "Forfait Maxi Appel + Internet 2000 F", type=BUNDLE, price=2_000):
         
         query = f"""
@@ -298,6 +320,15 @@ def roll_back_to_original_state_before_test_add_new_offer(connection, offer_conf
 def roll_back_to_original_state_before_test_create_new_customer(connection, customer_id):
       query = f"""
       DELETE FROM {CUSTOMERS_TABLE} WHERE id = {customer_id};
+        """
+      print(query)
+      with connection.cursor() as cursor:
+            cursor.execute(query)
+            connection.commit()
+
+def roll_back_to_original_state_before_test_create_new_subscription(connection, subscription_id):
+      query = f"""
+      DELETE FROM {SUBSCRIPTIONS_TABLE} WHERE id = {subscription_id};
         """
       print(query)
       with connection.cursor() as cursor:
@@ -412,7 +443,13 @@ def test_add_new_customer(connection):
     roll_back_to_original_state_before_test_create_new_customer(connection, customer_id=customer_id)
     create_new_customer(connection=connection, id=customer_id)
     # SELECT * FROM dw.dim_customer WHERE customer_id = 10000000;
-    
+
+
+def test_add_new_subscription(connection):
+    subscription_id = 10_000_000
+    roll_back_to_original_state_before_test_create_new_subscription(connection,subscription_id=subscription_id )
+    create_new_subscription(connection=connection, subscription_id=subscription_id)
+      
 
 def test_purchase_an_offer():
      purchase_id = 10_000_000
@@ -478,7 +515,7 @@ if __name__ == "__main__":
         """  
         
 
-        b1, b2, b3 = get_test_service_usage_batches()
+        """b1, b2, b3 = get_test_service_usage_batches()
 
         print("Batch 1")
         print(pd.DataFrame(b1))
@@ -504,14 +541,17 @@ if __name__ == "__main__":
         # Then run the pipeline again
 
         # And then check
-        # SELECT * FROM dw.fact_consumption WHERE purchase_id = 10000000;
-
-        
-
+        # SELECT * FROM dw.fact_consumption WHERE purchase_id = 10000000;"""
 
         
         """get_new_offer_created(connection, id=offer_id)
         get_new_offer_config_created(connection, id=offer_config_id)"""
+
+        test_add_new_subscription(connection=connection) # Passed
+        # Then run the incremental pipeline dag
+        # Then chek if loaded
+        # SELECT * FROM dw.dim_subscription WHERE subscription_id = 10000000;
+
         
         
 
