@@ -4,7 +4,7 @@ ID | Test | Expected Result | Status
 T01 | Platform Setup | All tables (staging, dw, dq, ref and pipeline batch logs and watermark tables) created successfully and potentially populated | Passed |
 T02 | Platform setup restart | Do not erase any database, table or data, but simply notify platform already setup | Passed |
 T03 | Initial Pipeline | Full load successful for all dw tables, and initital metadata inserted or updated successfully, including watermark updated to the extraction start datetime | Passed |
-T04 | Initial Pipeline restart| No duplicate and no error, do nothing,  but simply notify platform already initalized | Passed |
+T04 | Initial Pipeline restart| No duplicate and no error, do nothing,  but simply notify platform already initalized | To be tested |
 T05 | Incremental Execution of the Pipeline without new data | No duplicates and no error, no data loaded or processed, moved to saging or even extracted, existant raw data directory intact and not modified (idempotency), simply update (advance) watermark to the datetime the extraction process has started | Passed |
 T06 | Creation of a new offer | New offer loaded into the datawarehouse with correct attributes | Passed |
 T07 | Update the name of an offer (which is a SCD 1 attribute in dim_offer) | offer name updated to that new name for all records of of the concerned offer in dim_offer (SCD1) | Passed |
