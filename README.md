@@ -73,7 +73,7 @@ Usage Mediation System| Data, voice and SMS usage events| Kafka
 
 The data pipeline is organized into the following stages:
 
-6.1. Data Extraction
+### Data Extraction
 
 Data is extracted into the Raw layer as CSV files, using different tools depending on the source:
 
@@ -81,20 +81,20 @@ Data is extracted into the Raw layer as CSV files, using different tools dependi
 - Parquet purchase files are read using DuckDB and exported to CSV files in the Raw layer.
 - Service usage events are consumed in batches from Kafka into the Raw layer using a Python Kafka consumer
 
-6.2. Raw Layer
+### Raw Layer
 
 The Raw layer stores extracted data before further processing.
 
 It preserves the original source data and associates records or files with the identifier of the current batch.
 Data in the Raw Layer is organized by date and by batch identifier.
 
-6.3. Staging Layer
+### Staging Layer
 
 Raw data is transferred into PostgreSQL staging tables using psql \copy command.
 
 The Staging layer provides an intermediate area for data quality checks and preparation before warehouse loading.
 
-6.4. Data Quality
+### Data Quality
 
 SQL-based data quality checks are executed in PostgreSQL through "psql".
 
@@ -108,7 +108,7 @@ The checks cover:
 
 Quality results and data acceptance or rejection decisions are tracked using via PostgreSQL table.
 
-6.5. Data Transformation and Loading
+### Data Transformation and Loading
 
 Data transformations and warehouse loading are implemented using SQL queries executed through "psql".
 
@@ -120,7 +120,7 @@ The platform uses a PostgreSQL dimensional data warehouse based on a star schema
 
 The model includes fact tables for telecom offer purchases and service consumption, supported by dimensions such as date, customer, subscription and offer.
 
-[Data Warehouse Model] (./docs/04_dw_design/dw_model.png)
+![Data Warehouse Model](./docs/resources/erds/images/dw_erd.png)
 
 The loading processes implement appropriate Slowly Changing Dimension (SCD) strategies to manage dimension updates and preserve relevant historical information.
 
