@@ -3,6 +3,10 @@ import subprocess
 
 from config.config import HOST, USER, get_staging_params, DATA_PLATFORM_DB
 
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 def move_to_staging(staging_raw_data_dir):
 
         queries = []
@@ -13,7 +17,7 @@ def move_to_staging(staging_raw_data_dir):
                 table = i["table"]
                 file_path = i["file_path"]
                 if not file_path.exists():
-                        print(f"No data to move to {table}")
+                        logger.warning(f"No data to move to {table}")
                         continue
                 query = f"""\\copy {table} FROM {file_path} WITH (FORMAT CSV, HEADER TRUE)"""
         
@@ -23,7 +27,7 @@ def move_to_staging(staging_raw_data_dir):
                 queries.append(query)
        
         if len(queries) == 0:
-                print("No data moved to staging cause no data extracted from any sources")
+                logger.warning("No data moved to staging cause no data extracted from any sources")
                 return
 
         i = STAGING_PARAMS["services_usage"]
@@ -39,11 +43,10 @@ def move_to_staging(staging_raw_data_dir):
                 INSERT INTO {table} ({columns}) SELECT * FROM {temp_table} ON CONFLICT (message_partition, message_offset) DO NOTHING;
                 COMMIT;
                 """
-                print(query)
                 queries[-1] = query # Replace last query
 
         query = "\n".join(queries)
-        # query = queries[-1]
+
         print(query)
         
 
@@ -55,14 +58,12 @@ def move_to_staging(staging_raw_data_dir):
         
         ]
         print(command)
-        # exit()
         
 
         try:
                subprocess.run(command, input=query, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
                 error_message = e.stderr
-                print(error_message)
                 raise RuntimeError(error_message) from e
         # !!!later :  ahndle errors and get th eouptut to ... the number of records extracted CompletedProcess(args=['psql', '-U', 'starias22', '-h', 'localhost', '-d', 'ben_telecom'], returncode=0, stdout='COPY 28\nCOPY 15\nCOPY 0\nCOPY 5000000\nCOPY 5928704\n', stderr='')
         # !!!Handle it so that the password wll not be prompted fro the command line

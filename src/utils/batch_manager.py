@@ -19,9 +19,7 @@ def start_batch():
                 
                 connection.commit()
                 result = { "batch_id":batch_id,
-                        #"started_at":started_at
                         }
-                print(result)
                 return batch_id
         
         

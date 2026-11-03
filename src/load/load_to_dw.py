@@ -35,7 +35,6 @@ def load(incremental=True, batch_id=None):
                 check=True
                 )
         except subprocess.CalledProcessError as e:
-                print(e.stdout)
                 error_message = e.stderr
                 raise RuntimeError(error_message) from e
         

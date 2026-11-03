@@ -27,10 +27,7 @@ def check_quality(batch_id=1):
                 check=True
         )
         except subprocess.CalledProcessError as e:
-            print(e.stdout)
             error_message = e.stderr           
-            print(error_message)
-
             raise RuntimeError(error_message) from e # Relancer ie propage rlerreur
             
         

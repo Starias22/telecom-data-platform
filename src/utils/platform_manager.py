@@ -3,10 +3,16 @@ import subprocess
 
 from dotenv import load_dotenv
 
-from config.config import BATCH_LOGS_TABLE, BATCH_STATUS_COL, HOST, PLATFORM_INITIALIZATION_NOT_DONE_OR_INCOMPLET, PLATFORM_INITIALIZATION_SUCCESSFUL, PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET, USER, PLATFORM_STATE_COL, PLATFORM_STATE_TABLE, SETUP_COMPLETED, INITIALIZED
+from config.config import HOST, PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET, USER, PLATFORM_STATE_COL, PLATFORM_STATE_TABLE, SETUP_COMPLETED, INITIALIZED
 from config.paths import ENV_FILE_PATH, SQL_INITIAL_SETUP_MAIN_FILE_PATH
 from src.utils.db_connector import get_connection
 from psycopg.errors import UndefinedTable, OperationalError
+
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
+print(logger)
+
 
 def get_platform_state():
     try:
@@ -22,9 +28,6 @@ def get_platform_state():
             platform_state = cursor.fetchone()[0]
             # !!! Later replace by throwing execptions
     except OperationalError as e:
-        print("*********")
-        print(e)
-        print(str(e))
         if "database" in str(e) and "does not exist" in str(e):
                        return PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET
     except UndefinedTable as e:
@@ -33,7 +36,6 @@ def get_platform_state():
 
 def is_platform_setup():
      platform_sate = get_platform_state()
-     print(platform_sate)
      return platform_sate in [ SETUP_COMPLETED, INITIALIZED]
 
 def setup_platform_database():
@@ -61,4 +63,3 @@ def mark_platform_initialized(connection):
 
 if __name__ ==  "__main__":
        pass
-        # print(is_platform_setup())

@@ -1,23 +1,23 @@
 
-import os
 
 from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
-from dotenv import load_dotenv
 
-from config.paths import ENV_FILE_PATH, SQL_INITIAL_SETUP_MAIN_FILE_PATH
-from config.config import HOST, PLATFORM_INITIALIZATION_NOT_DONE_OR_INCOMPLET, PLATFORM_INITIALIZATION_SUCCESSFUL, PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET, USER, SETUP_COMPLETED, INITIALIZED
+from config.config import SETUP_COMPLETED, INITIALIZED
 
-from src.utils.platform_manager import is_platform_setup, setup_platform_database, get_platform_state
-
+from src.utils.platform_manager import setup_platform_database, get_platform_state
+from src.utils.logger import get_logger
 from dags.utils.pipeline_factory import DEFAULT_ARGS
+
+logger = get_logger(__name__)
+
 
 def setup_data_platform():
         platform_state = get_platform_state()
         if platform_state == SETUP_COMPLETED:
-                print("Platform setup already performed")
+                logger.info("Platform setup already performed. Skipping setup.")
         elif platform_state == INITIALIZED:
-                print("Platform setup already performed (Platform even initialized)")
+                logger.info("Platform setup already performed (Platform even initialized). Skipping setup.")
         
         else:
                 setup_platform_database()

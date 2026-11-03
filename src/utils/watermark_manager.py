@@ -11,6 +11,7 @@ def get_last_watermark():
         SELECT {LAST_SUCCESSFUL_WATERMARK_COL}
         FROM {WATERMARK_TABLE};
         """
+        print(query)
         with connection.cursor() as cursor:
                 cursor.execute(query)
                 last_successful_water_mark = cursor.fetchone()[0].strftime("%Y-%m-%d %H:%M:%S")
@@ -19,13 +20,13 @@ def get_last_watermark():
 
 def update_watermark(new_watermark):
         connection = get_connection()
-        print(new_watermark)
-
+        
         query = f"""
         UPDATE {WATERMARK_TABLE}
         SET {LAST_SUCCESSFUL_WATERMARK_COL} = '{new_watermark}',
             {UPDATED_AT_COL} = CURRENT_TIMESTAMP;
-        """        
+        """  
+        print(query)      
         with connection.cursor() as cursor:
                 cursor.execute(query)
                 connection.commit()
