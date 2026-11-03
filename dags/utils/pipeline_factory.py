@@ -28,15 +28,8 @@ SOURCE_NAMES = SOURCE_NAMES[:-1]
 def mark_batch_failed(context):
         task_instance = context["task_instance"]
         task_id = task_instance.task_id
-        try_num = task_instance.try_number
-        print(try_num)
         batch_id = task_instance.xcom_pull(task_ids="start_batch")
-        print("*********")
-        print(batch_id)
-        print("*********")
-        if batch_id:
-                print("The batch is going to be marked as failed")
-
+        if batch_id:                
                 mark_batch_as_failed(
                         batch_id=batch_id,
                         error_message=f"Task '{task_id}' failed: "
