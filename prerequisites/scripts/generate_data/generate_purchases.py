@@ -20,6 +20,7 @@ def generate_purchases():
 
 
         subscriptions_df = pd.read_csv(SUBSCRIPTIONS_RECORDS_FILE, parse_dates=[REGISTRATION_DATE_COL, TERMINATION_DATE_COL])
+        
         print(subscriptions_df[REGISTRATION_DATE_COL].dtype)
         print(subscriptions_df[TERMINATION_DATE_COL].dtype)
         
@@ -33,7 +34,10 @@ def generate_purchases():
 
 
         # Determine global date range
-        first_operational_date = subscriptions_df[REGISTRATION_DATE_COL].min()
+        first_operational_date = subscriptions_df[REGISTRATION_DATE_COL].min().date()
+        print(first_operational_date)
+        print(type(first_operational_date))
+        # exit()
 
         last_operational_date = pd.Timestamp(TODAY)
 
@@ -88,18 +92,25 @@ def generate_purchases():
 
                 
                 purchases_df.rename(columns={ID_COL:SUBSCRIPTION_ID_COL}, inplace = True)
+                print(purchases_df)
+                print(len(purchases_df))
                 
+                seconds_before_subscription_termination_or_end_of_day = purchases_df[TERMINATION_DATE_COL].dt.second.astype("Int64").fillna(24 * 60 * 60)
+                print(len(seconds_before_subscription_termination_or_end_of_day))
+                print(seconds_before_subscription_termination_or_end_of_day)
+               
+                print(seconds_before_subscription_termination_or_end_of_day)
+                               
                 
                 # Generate a random time (in seconds) for each purchase of this day
                 random_num_seconds = rng.integers(0,
-                                        24 * 60 * 60, 
+                                        seconds_before_subscription_termination_or_end_of_day,
                                         size = len(purchases_df)
                                         
                 )
                 purchases_df[PURCHASED_AT_COL] = (
                         current_date + pd.to_timedelta(random_num_seconds, unit="seconds")
-                )                
-                
+                )          
                 
                 purchases_df[PAYMENT_METHOD_COL] = rng.choice(
                         list(PAYMENT_METHOD_PROBABILITIES.keys()), size=len(purchases_df), p=list(PAYMENT_METHOD_PROBABILITIES.values())
@@ -137,7 +148,8 @@ def generate_purchases():
                 
                 cpt += len(purchases_df)
 
-                if len(purchases_df) >= 1_000:
+                if len(purchases_df) >= 1_00:
+                        print(len(purchases_df))
                         # print(purchases_df[[ID_COL, SUBSCRIPTION_ID_COL, PURCHASED_AT_COL, REGISTRATION_DATE_COL]])
                         return
 
