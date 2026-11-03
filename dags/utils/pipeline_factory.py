@@ -48,7 +48,6 @@ def build_pipeline(dag, incremental:bool=False):
     start_batch_task = PythonOperator(
                 task_id="start_batch",
                 python_callable=start_batch,
-                op_kwargs={"incremental":incremental},
                 dag=dag           
                 
         )
