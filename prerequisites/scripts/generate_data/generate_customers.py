@@ -12,8 +12,10 @@ from config.config import SEED, CITY_PROBABILITIES, CUSTOMERS_MIN_AGE, NUM_CUSTO
 
 def generate_customers():
         now = datetime.now()
-        UPDATED_AT = now.strftime("%Y-%m-%d %H:%M:%S")
+        NOW = now.strftime("%Y-%m-%d %H:%M:%S")
         TODAY = now.date()
+        UPDATED_AT = NOW
+        
 
         rng = np.random.default_rng(SEED)
 
@@ -37,13 +39,21 @@ def generate_customers():
 
         # Customer registration date
         min_registration_date = pd.Timestamp(TELECOM_CREATION_DATE)
-        max_registration_date = pd.Timestamp(TODAY)
-        registration_days_range_max_day = (max_registration_date - min_registration_date).days
+        max_registration_date = pd.Timestamp(NOW)
+        print(min_registration_date)
+        print(max_registration_date)
+        # exit()
+        registration_days_range_max_second = (max_registration_date - min_registration_date).total_seconds()
+        print(registration_days_range_max_second)
+        # exit()
         registration_dates = min_registration_date + pd.to_timedelta(
-                rng.integers(0, registration_days_range_max_day+1, size=NUM_CUSTOMERS), 
-                unit="days")
+                rng.integers(0, registration_days_range_max_second+1, size=NUM_CUSTOMERS), 
+                unit="seconds")
         print(registration_dates)
-        customers_df[REGISTRATION_DATE_COL] = registration_dates.strftime("%Y-%m-%d")
+        print(registration_dates.min())
+        print(registration_dates.max())
+        # exit()
+        customers_df[REGISTRATION_DATE_COL] = registration_dates.strftime("%Y-%m-%d %H:%M:%S")
         print(customers_df)
 
         # Customer birthdate
@@ -60,6 +70,8 @@ def generate_customers():
         min_termination_dates = registration_dates[terminated_customer_mask]
         max_termination_date = pd.Timestamp(now)
         termination_dates = pd.Series(min_termination_dates +  pd.to_timedelta(rng.integers(0, (max_termination_date - min_termination_dates).seconds +1), unit="seconds"))
+        print(termination_dates)
+        # exit()
 
         print(terminated_customer_mask.sum())
         print(termination_dates.isna().sum())

@@ -67,12 +67,13 @@ def generate_subscriptions():
         # Subscription registration date
         mins_subscription_registration_date = pd.to_datetime(subsriptions_df[CUSTOMER_REGISTRATION_DATE_COL])
         max_subscription_registration_date = pd.Timestamp(now)
-        subscription_registration_days_range_max_day = (max_subscription_registration_date - mins_subscription_registration_date).dt.days
-        print(subscription_registration_days_range_max_day)
+        subscription_registration_days_range_max_seconds = (max_subscription_registration_date - mins_subscription_registration_date).dt.total_seconds()
+        print(subscription_registration_days_range_max_seconds)
 
         subscription_registration_dates = mins_subscription_registration_date + pd.to_timedelta(
-        rng.integers(0, (max_subscription_registration_date - mins_subscription_registration_date).dt.seconds + 1, size=subsriptions_num), unit="seconds")
+        rng.integers(0, (subscription_registration_days_range_max_seconds)+ 1, size=subsriptions_num), unit="seconds")
         print(subscription_registration_dates)
+        # exit()
         subsriptions_df[REGISTRATION_DATE_COL] = subscription_registration_dates.dt.strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -82,6 +83,8 @@ def generate_subscriptions():
         min_termination_dates = subscription_registration_dates[terminated_subscriptions_mask]
         max_termination_date = pd.Timestamp(now)
         termination_dates = pd.Series(min_termination_dates +  pd.to_timedelta(rng.integers(0, (max_termination_date - min_termination_dates).dt.seconds + 1), unit="seconds"))
+        print(termination_dates)
+        # exit()
         subsriptions_df.loc[terminated_subscriptions_mask, TERMINATION_DATE_COL] = termination_dates.dt.strftime("%Y-%m-%d %H:%M:%S")
 
         # Unique ids
