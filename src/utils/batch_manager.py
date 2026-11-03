@@ -4,11 +4,10 @@ from src.utils.db_connector import get_connection
 from src.utils.platform_manager import mark_platform_initialized
 from psycopg.errors import UndefinedTable
 
-def start_batch(incremental=True):
+def start_batch():
         connection = get_connection()
-        x = "INCREMENTAL" if incremental else "INITIAL"
         query = f"""
-                INSERT INTO {BATCH_LOGS_TABLE} ({BATCH_TYPE_COL}, {BATCH_STATUS_COL}) VALUES ('{"INCREMENTAL" if incremental else "INITIAL"}', '{RUNNING}') RETURNING {BATCH_ID_COL}, {STARTED_AT};
+                INSERT INTO {BATCH_LOGS_TABLE} ({BATCH_STATUS_COL}) VALUES ('{RUNNING}') RETURNING {BATCH_ID_COL}, {STARTED_AT};
                 """
         print(query)
         with connection.cursor() as cursor:
