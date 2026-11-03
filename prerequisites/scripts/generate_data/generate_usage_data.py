@@ -189,6 +189,7 @@ def generate_service_usage_data():
 
 
         subscriptions_df = pd.read_csv(SUBSCRIPTIONS_RECORDS_FILE, usecols=[ID_COL, CUSTOMER_ID_COL, PHONE_NUMBER_COL, TERMINATION_DATE_COL], parse_dates=[TERMINATION_DATE_COL]).rename(columns={ID_COL:SUBSCRIPTION_ID_COL})
+        
 
         usage_df = usage_df.merge(
                 subscriptions_df,
@@ -212,14 +213,31 @@ def generate_service_usage_data():
 
         
         print(usage_df[usage_df[TERMINATION_DATE_COL] <=usage_df[PURCHASED_AT_COL]])
+        # exit()
         
 
         usage_period_before_termination_days = usage_df[TERMINATION_DATE_COL] - usage_df[PURCHASED_AT_COL]
-        validity_period_days = pd.Series(pd.to_timedelta(usage_df[VALIDITY_DAYS_COL].to_numpy(), unit="days"))
+        usage_period_before_termination_days.isna()
+        
+        non_terminated_mask =  usage_df[TERMINATION_DATE_COL].isna()
+        print(non_terminated_mask)
+        print(usage_df)
+        # exit()
+        print(usage_df[non_terminated_mask][VALIDITY_DAYS_COL].to_numpy())
+        # exit()
+        
+        usage_period_before_termination_days[non_terminated_mask] = pd.Series(pd.to_timedelta(usage_df[non_terminated_mask][VALIDITY_DAYS_COL].to_numpy(), unit="days")) 
+        print(usage_period_before_termination_days)
+        # exit()
+        
+        # validity_period_days = pd.Series(pd.to_timedelta(usage_df[VALIDITY_DAYS_COL].to_numpy(), unit="days"))
 
         print(usage_period_before_termination_days)
-        print(validity_period_days)
-        usage_period_days = pd.concat([usage_period_before_termination_days, validity_period_days], axis=1).min(axis=1)
+        
+        # print(validity_period_days)
+        
+        # usage_period_days = pd.concat([usage_period_before_termination_days, validity_period_days], axis=1).min(axis=1)
+        usage_period_days = usage_period_before_termination_days
         print(usage_period_days.min())
         print(usage_period_days.max())
         print(usage_period_days.unique())
@@ -227,6 +245,7 @@ def generate_service_usage_data():
         usage_period_seconds = usage_period_days.dt.total_seconds().astype(int)
         print(usage_period_seconds)
         print(usage_period_seconds[usage_period_seconds <= 0])
+        # exit()
 
         usage_offset_seconds = rng.integers(0, usage_period_seconds + 1)
 
@@ -238,6 +257,13 @@ def generate_service_usage_data():
         print(usage_df.columns)
 
         print(usage_df)
+
+        
+
+        usage_df[TIMESTAMP_MILLISECONDS_COL] = pd.to_datetime(usage_df[TIMESTAMP_MILLISECONDS_COL]).astype("int64") // 10 ** 6
+        
+        # print(usage_df[usage_df[TIMESTAMP_MILLISECONDS_COL].astype(str) < usage_df[PURCHASED_AT_COL].astype(str) ])
+        # exit()
 
         usage_df = usage_df[
                 [
@@ -251,7 +277,7 @@ def generate_service_usage_data():
         ]
         ]
 
-        usage_df[TIMESTAMP_MILLISECONDS_COL] = pd.to_datetime(usage_df[TIMESTAMP_MILLISECONDS_COL]).astype("int64") // 10 ** 6
+        
         usage_df.sort_values(by=[TIMESTAMP_MILLISECONDS_COL, SUBSCRIPTION_ID_COL], inplace=True)
 
         usage_df[SMS_COUNT_COL] = usage_df[SMS_COUNT_COL].astype("Int64")
