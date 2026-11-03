@@ -32,17 +32,7 @@ Somme de tous les montants de tous les achats effectués par les clients avec le
 
     (Somme des bénéfices consommés en FCFA pour tous les achats) / (Somme des valeurs des bénéfices offerts en FCFA pour tous les achats)
 
-#### 4. Fréquence
-Mensuelle
-
-#### 5. Données Nécessaires
-1. Informations sur les clients
-2. Les souscripions
-3. Le catalogue des offres
-4. Les achats effectués
-4. Les données de consommation des bénéfices
-
-#### 6. Règles métier
+#### 4. Règles métier
 1. Un client elligible pour une offre X est un client possédant au moins un numéro téléphonique actif pendant la période d'activité considérée, et qui n'est exclut par aucune règle spécifique à l'offre X (par exemple anncienneté du client, segment du client, ...)
 
 ### Question 2: Quels segments de clients génèrent le plus de revenus?
@@ -72,17 +62,7 @@ Somme de tous les prix corresspondants aux achats effectués par les clients
 
 (Revenu total généré par le segment) / (Nombre total de clients du segment)
 
-#### 4. Fréquence
-Mensuelle
-
-#### 5. Données Nécessaires
-1. Informations sur les clients
-2. Les souscripions
-3. Le catalogue des offres
-4. Les achats effectués (pour tous les produits de l'opérateur)
-
-
-#### 6. Règles métier
+#### 4. Règles métier
 1. Les achats ici ne concernent pas uniquement les offres de communications téléphoniques (data, SMS, appel); ils concernent tous les produits commercialisés par l'opérateur, y compris les cartes SIM, pocket WIFI, téléphones portables, etc
 
 
@@ -133,13 +113,6 @@ Mensuelle
      
      (Somme des équivalents en FCFA consommés pour tous les services utilisés) / (Somme des valeurs totales en FCFA accordées)
 
-#### 4. Fréquence
-Mensuelle
-
-#### 5. Données Nécessaires
-1. Le catalogue des offres
-2. Les achats effectués
-3. Les données de consommation
 
 ### Question 4: Quelles régions présentent-ils le plus fort potentiel de croissance?
 #### 1. Description
@@ -174,15 +147,7 @@ Mensuelle
 
 [!!!Prendre la photo de la page ou jai demontre la formule , pis linserer pkus tart icic]
 
-#### 4. Fréquence
-Mensuelle
-
-#### 5. Données Nécessaires
-1. Les informations sur les clients y compris leur région
-2. Les achats effectués
-
-
-#### 6. Règles métier
+#### 4. Règles métier
 1. ...
 
 
@@ -202,15 +167,8 @@ Mensuelle
     - L'évolution du nombre d'achats effectués par le client sur chacune des périodes considérées (KPI 1)
     - L'évolution de la consommation des services DATA (KPI 2), VOICE (KPI 3) et SMS (KPI 4) 
 - Nombre (KPI 5) et pourcentage (KPI 6 ) de clients presentant des signes de baisse d'activité
-#### 4. Fréquence
-Quotidien
 
-#### 5. Données Nécessaires
-1. Les clients
-2. Les achats effectués
-3. Les données de consommation des services DATA, VOICE et SMS
-
-#### 6. Règles métier
+#### 4. Règles métier
 1. Un client présentant un signe de baisse d'activité est un client présentant une baisse pour au moins deux des 4 KPI 1, 2, 3 et 4 sur les périodes considérées, ou une baisse d'au mois 30% pour 2 de ces même KPIs au cas ou seulement deux périodes d'étude sont considérées.
 
 
