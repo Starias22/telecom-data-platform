@@ -163,6 +163,16 @@ Somme de tous les prix correspondants aux achats d'offres télécoms
 1. L'analyse se fera chaque premier du mois en prenant comme période actuelle du premier au dernier du mois précédent, et comme période précédente du premier au dernier du mois avant.
 2. Un client présentant un signe de baisse d'activité est un client présentant une baisse d'au mois 30% pour au moins deux des 4 KPI 1, 2, 3 et 4 entre les deux périodes considérées.
 
+### Granularité et Période/Fréquence d'analyse
+
+Question Métier | Niveau de Granularité | Période d'analyse / Fréquence |
+-----------------|-----------------------|---------------------------------|
+Q1 - Performance commerciale des offres | Offre x Période | Mensuelle, trimestrielle, anuelle, personnalisée |
+Q2 - Revenus par segment de clients | Segment x Période | Mensuelle, trimestrielle, anuelle, personnalisée |
+Q3 - Consommation des bénéfices des offres | Offre x Période | Mensuelle, trimestrielle, anuelle, personnalisée |
+Q4 - Performance commerciale régionale | Région x Période | Mensuelle, trimestrielle, anuelle, personnalisée |
+Q5 - Détection de la baisse d'activité des clients | Client x Période | Analyse mensuelle automatisée, comparaison de deux périodes consécutives de 30 jours |
+
 ## Exigences Non Fonctionelles (y compris techniques)
 
 1. **Scalabilité:** Supporter l'augmentation des volumes de données sans modification majeure de l'architecture
