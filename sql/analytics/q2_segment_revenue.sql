@@ -1,5 +1,9 @@
-WITH x AS (
-
+WITH selected_period AS (
+SELECT
+    DATE '2020-06-03' AS start_date,
+    DATE '2020-06-05' + 1 AS end_date -- +1 : end date will be exclusive
+),
+x AS (
 SELECT
     customer_segment,
     SUM(revenue) AS total_revenue
@@ -8,10 +12,10 @@ JOIN dw.dim_customer AS dc
     ON dc.customer_key = fp.customer_key
 JOIN dw.dim_date AS dd
     ON dd.date_key = fp.date_key
-WHERE full_date BETWEEN '2020-01-01' -- Period start
-                        AND '2020-05-31' -- Period end
+JOIN selected_period AS sp
+    ON full_date >= sp.start_date -- Period start
+        AND full_date < sp.end_date -- Period end
 GROUP BY customer_segment
-ORDER BY customer_segment
 ),
 y AS (
 SELECT SUM(total_revenue) AS global_telecom_revenue FROM x
@@ -22,11 +26,13 @@ SELECT
     COUNT(DISTINCT dc.customer_id) AS active_customers_count
 FROM dw.dim_customer AS dc
 JOIN dw.dim_subscription AS ds ON ds.customer_id = dc.customer_id
-WHERE ds.registration_date <=  '2020-05-31' -- Period end
-    AND (
-        ds.termination_date IS NULL
-        OR ds.termination_date >= '2020-01-01' -- Period start
-    )
+
+JOIN selected_period AS sp
+    ON ds.registration_date < sp.end_date -- Period end
+        AND (
+            ds.termination_date IS NULL
+            OR ds.termination_date >= sp.start_date -- Period start
+        )
 GROUP BY customer_segment
 )
 SELECT
@@ -46,4 +52,5 @@ FROM x
 CROSS JOIN y
 JOIN active_customers_count_by_segment AS accbs
     ON accbs.customer_segment = x.customer_segment
+ORDER BY customer_segment
 ;
