@@ -1,11 +1,15 @@
 # Exigences Métier (Business Requirements)
 ##  Exigences Fonctionnelles
 
-### Question 1: Quelles offres présentent les meilleures performances commerciales et financières, et lesquelles méritent des ajustements?
-#### 1. Description
+### Question 1: Evaluation de la performance commerciale et financière des offres
+#### Question Métier
 
+Quelles offres télécoms présentent les meilleures performances commerciales et financières, et lesquelles méritent des ajustements pour améliorer leur attractivité et rentabilité?
+
+#### 1. Description
+- Evaluer les perforamncas commerciales et financières des differentes offres télécoms afin d'identifier celles qui génèent le plus de revenus, atirent le plus de clients et présentent le meilleur niveau d'adoption.
 - Déterminer les offres à privilégier dans les campagnes marketing
-- Identifier les offres dont les caracteristiques (prix, bénéfices, facturations)  méritent d'être revues
+- Identifier les offres dont les caracteristiques (bénéfices, facturations, durée de validité)  méritent d'être revues
 - Identifier les offres qui pouraient être retirées du catalogue
 - Comparer les offres selon
     1. leur contribution financière (chiffres d'affaires généré )
@@ -14,24 +18,27 @@
 #### 2. Utilisateurs / Départements / Equipes / Parties Prenantes
 
 - Département Marketing
+- Dépatement Commercial
 
 #### 3. KPIs
-Pour chaque offre X:
-1. Le chiffre d'affaires généré par l'offre:
 
-Somme des montants de tous les achats de l'offre X pendant la période sélectionnée
+KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
+---------|-----------------------|--------|--------|
+1 | Performance financière de chaque offre | Chiffre d'affaires généré par chaque offre | Somme des montants de tous les achats de l'offre effectués pendant la période d'analyse |
+2 | Attractivité commerciale e chaque offre | Nombre de clients acheteurs distincts de chaque offre | Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse |
+3 | Adoption de chaque offre | Taux de pénétation de chaque offre | (Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse)  / ( Nombre total de clients actifs pendant la période d'analyse) |
+4 | Dynamique Commerciale de chaque offre | Nombre d'achats de chaque offre | Nombre total d'achats de l'offre effectués pendant la période d'analyse |
 
-2. Le nombre de clients acheteurs (distincts) de l'offre
+#### 4. Axes d'Analyse
+- Analyse par
+    - offre commerciale: par ex DATA100, DATA200, etc.
+    - type d'offre: DATA, MOBILE, BUNDLE
+    - catégorie d'offre: INTERNET, MAXI
+- Période d'analyse: Mensuelle, trimestrielle, anuelle, personnalisée
 
-Nombre de clients distincts ayant acheté l'offre X au moins une fois pendant la période sélectionnée
 
-3. Le taux de pénétration de l'offre dans la base des clients actifs
-
-(Nombre de clients distincts ayant acheté l'offre X au moins une fois pendant la période sélectionnée)  / ( Nombre total de clients actifs pendant la période sélectionnée)
-
-#### 4. Règles Métiers
-1. Un client actif est un client possédant au moins un numéro téléphonique actif pendant la période d'activité considérée
-2. Les offres sont comparées individuellemnt au sein de leur categories respectives (DATA, MOBILE, BUNDLE), afin d'évaluer leurs performances commerciales sans comparer directement des offres répondant à des besoins différents
+#### 5. Règles Métiers
+1. Un client actif est un client possédant au moins un numéro téléphonique actif pendant la période d'analyse considérée
 
 ### Question 2: Quels segments de clients génèrent le plus de revenus à travers leurs achats d'offres télécoms?
 
@@ -46,23 +53,21 @@ Nombre de clients distincts ayant acheté l'offre X au moins une fois pendant la
 - Département Marketing
 
 #### 3. KPIs
-1. Chiffres d'affaires issus des ventes des offres télécoms:
 
-Somme de tous les prix correspondants aux achats d'offres télécoms
+KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
+---------|-----------------------|--------|--------|
+1 | Performance financière globale | Chiffre d'affaires issus des ventes des offres télécoms | Somme de tous les montants correspondants aux achats d'offres télécoms pendant la période d'analyse |
+2 | Contribution financière de chaque segment | chiffre d'affaires total généré  par chaque segment | Somme de tous les prix correspondants aux achats d'offres télécoms effectués par le segment |
+3 | Contribution financière de chaque segment | contribution du segment au chiffre d'affaires télécom  de l'opérateur | (Somme de tous les prix corresspondants aux achats d'offres télécoms effectués par les clients du segment) / (Chiffres d'affaires des offres télécoms) |
+4 | Valeur client de chaque segment | chiffre d'affaires moyen généré par les clients actifs du segment | (Somme de tous les prix correspondants aux achats d'offres télécoms effectués par les clients du segment) / (Nombre total de clients actifs du segment) |
 
-2. Pour chaque segment X, le chiffre d'affaires total généré  par le segment via ses achat d'offres télécoms
+#### 4. Axes d'Analyse
+- Analyse par:
+    - segment de clients: PREMIUM, YOUTH, SME, STANDARS
+    - type de client: INDIVIDUAL, BUSINESS
+- Période d'analyse: Mensuelle, trimestrielle, anuelle, personnalisée
 
-(Somme de tous les prix correspondants aux achats d'offres télécoms effectués par le segment)
-
-3. Pour chaque segment X, la contribution du segment au chiffre d'affaires télécom  de l'opérateur
-
-    (Somme de tous les prix corresspondants aux achats d'offres télécoms effectués par les clients du segment) / (Chiffres d'affaires des offres télécoms)
-
-4. Pour chaque segment X, le chiffre d'affaires moyen généré par les clients actifs du segment via leurs achats télécom:
-
-(Somme de tous les prix correspondants aux achats d'offres télécoms effectués par les clients du segment) / (Nombre total de clients actifs du segment)
-
-#### 4. Règles Métiers
+#### 5. Règles Métiers
 
 1. Les revenus analysés correspondent exclusivement aux achats d'offres télécoms
 2. Chaque achat est attribué au segment auquel appartient le client au moment de l'achat
@@ -81,33 +86,25 @@ Somme de tous les prix correspondants aux achats d'offres télécoms
 
 #### 3. KPIs
 
-1. Taux global de consommation des bénéfices:
+KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
+---------|-----------------------|--------|--------|
+1 | - | Taux global de consommation des bénéfices pour les offres MAXI | (Somme des équivalents en FCFA consommés pour tous les services utilisés) / (Somme des valeurs totales en FCFA accordées) |
+2 | - | Taux global de consommation des bénéfices pour les offres INTERNET | (Somme des MB consommés ) / (Somme des MB accordés) |
+3 |- | Contribution de la consommation Data à la consommation globale (Uniquement pour les offres BUNDLE) | (Somme des équivalents FCFA des MB consommés) / (Somme des valeurs totales en FCFA accordées) |
+4 | - | Contribution de la consommation d'appels à la consommation globale (Uniquement pour les offres MAXI) | (Somme des équivalents FCFA des appels effectués) / (Somme des valeurs totales en FCFA accordées) |
+5 | - | Contribution de la consommation de SMS à la consommation globale (Uniquement pour les offres BUNDLE) | (Somme des équivalents FCFA des SMS envoyés) / (Somme des valeurs totales en FCFA accordées) |
     
-    - Pour les offres Maxi:
-    
-    (Somme des équivalents en FCFA consommés pour tous les services utilisés) / (Somme des valeurs totales en FCFA accordées) 
+#### 4. Axes d'Analyse
+- Analyse par
+    - offre commerciale: par ex DATA100, DATA200, etc.
+    - type d'offre: DATA, MOBILE, BUNDLE
+    - catégorie d'offre: INTERNET, MAXI
+- Période d'analyse: Mensuelle, trimestrielle, anuelle, personnalisée
 
-    - Pour les offres Internet:
-
-    (Somme des MB consommés ) / (Somme des MB accordés)
-
-2. Contribution de la consommation Data à la consommation globale (Uniquement pour les offres BUNDLE)
-
-(Somme des équivalents FCFA des MB consommés) / (Somme des valeurs totales en FCFA accordées)
-
-3. Contribution de la consommation d'appels à la consommation globale (Uniquement pour les offres MAXI)
-
-(Somme des équivalents FCFA des appels effectués) / (Somme des valeurs totales en FCFA accordées)
-
-4. Contribution de la consommation de SMS à la consommation globale (Uniquement pour les offres BUNDLE)
-
-(Somme des équivalents FCFA des SMS envoyés) / (Somme des valeurs totales en FCFA accordées)
-    
-
-#### 4. Règles Métiers
-
+#### 5. Règles Métiers
 
 ### Question 4: Comment évoluent les performances commerciales des différentes régions et quelles régions présentent des opportunités de développement commercial?
+
 #### 1. Description
 
 - Comparer les performances commerciales des différentes régions
@@ -121,25 +118,31 @@ Somme de tous les prix correspondants aux achats d'offres télécoms
 - Departement Marketing
 - Direction génerale
 
+
 #### 3. KPIs
-1. Taux de croissance du nombre de clients actifs par région
 
-(Nombre de clients actifs dans la région pendant la période actuelle - Nombre de clients actifs dans la région pendant période précédente) / ombre de clients actifs dans la région pendant période précédente
-
-2. Taux de croissance du nombre d'achats par région
-
-(Nombre d'achats effectués dans la région  au cours de la période actuelle - Nombre d'achats effectués dans la région au cours de la période précédente) / Nombre d'achats effectués dans la région au cours de la période précédente
-
-3. Taux de croissance du chiffre d'affaires par région
-
-(Chiffre d'affaires de la région durant la période actuelle - Chiffre d'affaires de la région durant la période précédente) / Chiffre d'affaires de la région durant la période précédente
-
-4. Chiffre d'affaires moyen généré par client actif par région
-
-(Chiffre d'affaires généré par la région) / Nombre total de clients actifs dans la région
+KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
+---------|-----------------------|--------|--------|
+1 | - | Taux de croissance des clients actifs par région | (Nombre de clients actifs dans la région pendant la période actuelle - Nombre de clients actifs dans la région pendant période précédente) / ombre de clients actifs dans la région pendant période précédente |
+2 | - | Taux de croissance des achats par région | (Nombre d'achats effectués dans la région  au cours de la période actuelle - Nombre d'achats effectués dans la région au cours de la période précédente) / Nombre d'achats effectués dans la région au cours de la période précédente |
+3 | - | Taux de croissance du chiffre d'affaires par région | (Chiffre d'affaires de la région durant la période actuelle - Chiffre d'affaires de la région durant la période précédente) / Chiffre d'affaires de la région durant la période précédente |
+4 | - | Chiffre d'affaires moyen généré par client actif par région | (Chiffre d'affaires généré par la région) / Nombre total de clients actifs dans la région |
 
 [!!!Prendre la photo de la page ou jai demontre la formule , pis linserer pkus tart icic]
 
+#### 4. Axes d'Analyse
+- Analyse par:
+    - ville: Covè, Abomey, Cotonou, Porto-Novo, etc
+    - département: Zou, Littoral, Ouémé, etc
+- Période d'analyse:
+    - Analyse Mensuelle, trimestrielle, anuelle, personnalisée
+    - Analyse comparative de deux périodes conséutives
+    - Ex:
+        - Septembre 2026 vs Octobre 2026
+        - Trimestre 2 2026 vs Trimestre 3 2026
+        - 2025 vs 2026
+
+#### 5. Règles Métiers
 
 ### Question 5: Quels clients présentent actuellemt des signes de baisse d'activité? (Fidélisation/Retention)
 #### 1. Description
@@ -154,25 +157,22 @@ Somme de tous les prix correspondants aux achats d'offres télécoms
 - Equipe de fidélisation/retention
 
 #### 3. KPIs
-- Pour chaque client:
-    - L'évolution du nombre d'achats effectués par le client sur chacune des périodes considérées (KPI 1)
+KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
+---------|-----------------------|--------|--------|
+1 | - | L'évolution du nombre d'achats effectués par le client | (Nombre d'achat effectués par le client pendant la période actuelle - Nombre d'achats effectués par le client pendant période précédente) / Nombre d'achats effectués par le client pendant période précédente |
+2 | - | L'évolution de la consommation DATA par le client | (Quantité de MB consommés par le client pendant la période actuelle - Quantité de MB consommés par le client pendant la période précédente) / Quantité de MB consommés par le client pendant la période précédente |
+3 | - | L'évolution de la consommation CALL par le client | (Nombre total de secondes des appels effectués par le client pendant la période actuelle - Nombre total de secondes des appels effectués par le client pendant la période précédente) / Quantité de MB consommés par le client pendant la période précédente |
+4 | - | L'évolution de la consommation SMS par le client | (Nombre total de SMS envoyés par le client pendant la période actuelle - Nombre total de SMS envoyés par le client pendant la période précédente) / Nombre total de SMS envoyés par le client pendant la période précédente |
+5 | - | Effectif des clients présentant des signes de baisse d'activité | Nombre total de clients présentant des signes de baisse d'activité |
+6 | - | Porcentage des clients présentant des signes de baisse d'activité | (Nombre total de clients présentant des signes de baisse d'activité) * 100 / Nombre total de clients actifs |
 
-    - L'évolution de la consommation des services DATA (KPI 2), CALL (KPI 3) et SMS (KPI 4) 
-- Nombre (KPI 5) et pourcentage (KPI 6 ) de clients présentant des signes de baisse d'activité
+#### 4. Axes d'Analyse
+- L'analyse se fera chaque premier du mois en prenant comme période actuelle du premier au dernier du mois précédent, et comme période précédente du premier au dernier du mois avant.
 
-#### 4. Règles métier
-1. L'analyse se fera chaque premier du mois en prenant comme période actuelle du premier au dernier du mois précédent, et comme période précédente du premier au dernier du mois avant.
-2. Un client présentant un signe de baisse d'activité est un client présentant une baisse d'au mois 30% pour au moins deux des 4 KPI 1, 2, 3 et 4 entre les deux périodes considérées.
+#### 5. Règles Métiers
 
-### Granularité et Période/Fréquence d'analyse
+1. Un client présentant un signe de baisse d'activité est un client présentant une baisse d'au mois 30% pour au moins deux des 4 KPI 1, 2, 3 et 4 entre les deux périodes considérées.
 
-Question Métier | Niveau de Granularité | Période d'analyse / Fréquence |
------------------|-----------------------|---------------------------------|
-Q1 - Performance commerciale des offres | Offre x Période | Mensuelle, trimestrielle, anuelle, personnalisée |
-Q2 - Revenus par segment de clients | Segment x Période | Mensuelle, trimestrielle, anuelle, personnalisée |
-Q3 - Consommation des bénéfices des offres | Offre x Période | Mensuelle, trimestrielle, anuelle, personnalisée |
-Q4 - Performance commerciale régionale | Région x Période | Mensuelle, trimestrielle, anuelle, personnalisée |
-Q5 - Détection de la baisse d'activité des clients | Client x Période | Analyse mensuelle automatisée, comparaison de deux périodes consécutives de 30 jours |
 
 ## Exigences Non Fonctionelles (y compris techniques)
 
