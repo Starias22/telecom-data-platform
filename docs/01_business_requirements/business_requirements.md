@@ -5,7 +5,7 @@
 #### 1. Description
 
 - Déterminer les offres à privilégier dans les campagnes marketing
-- Identifier les offres dont les caracteristiques (prix, bénéfices, facturations)  meritent d'être revues
+- Identifier les offres dont les caracteristiques (prix, bénéfices, facturations)  méritent d'être revues
 - Identifier les offres qui pouraient être retirées du catalogue
 - Comparer les offres selon
     1. leur contribution financière (chiffres d'affaires généré )
@@ -58,15 +58,15 @@ Somme de tous les prix correspondants aux achats d'offres télécoms
 
     (Somme de tous les prix corresspondants aux achats d'offres télécoms effectués par les clients du segment) / (Chiffres d'affaires des offres télécoms)
 
-4. Pour chaque segment X, le chiffre d'affaires moyen généré par les client du segment via leurs achats télécom:
+4. Pour chaque segment X, le chiffre d'affaires moyen généré par les clients actifs du segment via leurs achats télécom:
 
-(Somme de tous les prix correspondants aux achats d'offres télécoms effectués par les clients du segment) / (Nombre total de clients du segment)
+(Somme de tous les prix correspondants aux achats d'offres télécoms effectués par les clients du segment) / (Nombre total de clients actifs du segment)
 
 #### 4. Règles Métiers
 
 1. Les revenus analysés correspondent exclusivement aux achats d'offres télécoms
 2. Chaque achat est attribué au segment auquel appartient le client au moment de l'achat
-3. Le chiffre d'affaires moyen par client est calculé sur l'ensemble des clients du segment, y compris ceux n'ayant effectué aucun achat pendant la période considérée.
+3. Le chiffre d'affaires moyen par client actif est calculé sur l'ensemble des clients actifs du segment durant la periode danalyse, y compris ceux n'ayant effectué aucun achat pendant la période considérée.
 
 ### Question 3: Les clients consomment-ils effectivement les bénéfices et services inclus dans les offres qu'ils achètent?
 
@@ -85,8 +85,9 @@ Somme de tous les prix correspondants aux achats d'offres télécoms
     
     - Pour les offres Maxi:
     
-    (Somme des équivalents en FCFA consommés pour tous les services utlisés) / (Somme des valeurs totales en FCFA accordées) 
-    - Pour les offres Internet (Data):
+    (Somme des équivalents en FCFA consommés pour tous les services utilisés) / (Somme des valeurs totales en FCFA accordées) 
+
+    - Pour les offres Internet:
 
     (Somme des MB consommés ) / (Somme des MB accordés)
 
@@ -123,19 +124,19 @@ Somme de tous les prix correspondants aux achats d'offres télécoms
 #### 3. KPIs
 1. Taux de croissance du nombre de clients actifs par région
 
-(Nombre de clients actifs de la période actuelle - Nombre de clients actifs de la période précédente) / Nombre de clients actifs de la période précédente
+(Nombre de clients actifs dans la région pendant la période actuelle - Nombre de clients actifs dans la région pendant période précédente) / ombre de clients actifs dans la région pendant période précédente
 
 2. Taux de croissance du nombre d'achats par région
 
-(Nombre d'achats effectués  au cours de la période actuelle - Nombre d'achats effectués au cours de la période précédente) / Nombre d'achats effectués  au cours de la période précédente
+(Nombre d'achats effectués dans la région  au cours de la période actuelle - Nombre d'achats effectués dans la région au cours de la période précédente) / Nombre d'achats effectués dans la région au cours de la période précédente
 
 3. Taux de croissance du chiffre d'affaires par région
 
-(Chiffre d'affaires de la période actuelle - Chiffre d'affaires de la période précédente) / Chiffre d'affaires de la période précédente
+(Chiffre d'affaires de la région durant la période actuelle - Chiffre d'affaires de la région durant la période précédente) / Chiffre d'affaires de la région durant la période précédente
 
 4. Chiffre d'affaires moyen généré par client actif par région
 
-(Chiffre d'affaires généré par la région) / Nombre total de clients dans la région
+(Chiffre d'affaires généré par la région) / Nombre total de clients actifs dans la région
 
 [!!!Prendre la photo de la page ou jai demontre la formule , pis linserer pkus tart icic]
 
