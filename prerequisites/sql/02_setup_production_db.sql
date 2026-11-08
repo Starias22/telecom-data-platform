@@ -13,7 +13,7 @@ CREATE SCHEMA crm; -- Customer Reletion Management (CRM)
 CREATE SCHEMA subscriptions;
 
 CREATE TABLE offers_catalog.offers(
-        id SERIAL PRIMARY KEY,
+        id VARCHAR(20) PRIMARY KEY,
         name VARCHAR(50) UNIQUE NOT NULL,
         type VARCHAR(10) NOT NULL CHECK (type IN('DATA', 'MOBILE', 'BUNDLE')),
         price_xof INT, -- Nullable
@@ -34,7 +34,7 @@ CREATE TABLE offers_catalog.offer_billings(
 
 CREATE TABLE offers_catalog.offer_configurations(
         id SERIAL PRIMARY KEY,
-        offer_id INT NOT NULL,
+        offer_id VARCHAR(20) NOT NULL,
         value_xof INT,
         value_mb DECIMAL,
         validity_days INT,

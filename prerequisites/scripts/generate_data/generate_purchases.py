@@ -89,8 +89,6 @@ def generate_purchases():
         
                 purchases_df = active_subscriptions_df.loc[active_subscriptions_df.index.repeat(purchases_counts)]
                 
-
-                
                 purchases_df.rename(columns={ID_COL:SUBSCRIPTION_ID_COL}, inplace = True)
                 print(purchases_df)
                 print(len(purchases_df))
@@ -145,6 +143,7 @@ def generate_purchases():
                 
                 file = dir / f"{current_date.strftime('%Y%m%d')}.parquet"
                 purchases_df.to_parquet(file, index=False)
+                # purchases_df.to_csv(file, index=False)
                 
                 cpt += len(purchases_df)
 
