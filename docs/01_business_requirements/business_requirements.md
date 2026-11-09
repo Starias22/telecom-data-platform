@@ -25,7 +25,7 @@ Quelles offres télécoms présentent les meilleures performances commerciales e
 KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 ---------|-----------------------|--------|--------|
 1 | Performance financière de chaque offre | Chiffre d'affaires généré par chaque offre | Somme des montants de tous les achats de l'offre effectués pendant la période d'analyse |
-2 | Attractivité commerciale e chaque offre | Nombre de clients acheteurs distincts de chaque offre | Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse |
+2 | Attractivité commerciale de chaque offre | Nombre de clients acheteurs distincts de chaque offre | Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse |
 3 | Adoption de chaque offre | Taux de pénétation de chaque offre | (Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse)  / ( Nombre total de clients actifs pendant la période d'analyse) |
 4 | Dynamique Commerciale de chaque offre | Nombre d'achats de chaque offre | Nombre total d'achats de l'offre effectués pendant la période d'analyse |
 
@@ -63,8 +63,7 @@ KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 
 #### 4. Axes d'Analyse
 - Analyse par:
-    - segment de clients: PREMIUM, YOUTH, SME, STANDARS
-    - type de client: INDIVIDUAL, BUSINESS
+    - segment de clients: PREMIUM, YOUTH, SME, STANDARD
 - Période d'analyse: Mensuelle, trimestrielle, anuelle, personnalisée
 
 #### 5. Règles Métiers
@@ -88,11 +87,11 @@ KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 
 KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 ---------|-----------------------|--------|--------|
-1 | - | Taux global de consommation des bénéfices pour les offres MAXI | (Somme des équivalents en FCFA consommés pour tous les services utilisés) / (Somme des valeurs totales en FCFA accordées) |
-2 | - | Taux global de consommation des bénéfices pour les offres INTERNET | (Somme des MB consommés ) / (Somme des MB accordés) |
-3 |- | Contribution de la consommation Data à la consommation globale (Uniquement pour les offres BUNDLE) | (Somme des équivalents FCFA des MB consommés) / (Somme des valeurs totales en FCFA accordées) |
-4 | - | Contribution de la consommation d'appels à la consommation globale (Uniquement pour les offres MAXI) | (Somme des équivalents FCFA des appels effectués) / (Somme des valeurs totales en FCFA accordées) |
-5 | - | Contribution de la consommation de SMS à la consommation globale (Uniquement pour les offres BUNDLE) | (Somme des équivalents FCFA des SMS envoyés) / (Somme des valeurs totales en FCFA accordées) |
+1 | - | Taux global de consommation des bénéfices | Pour les offres MAXI: (Somme des équivalents en FCFA consommés pour tous les services utilisés) / (Somme des valeurs totales en FCFA accordées) |
+1 | - | Taux global de consommation des bénéfices | Pour les offres INTERNET: (Somme des MB consommés ) / (Somme des MB accordés) |
+2 |- | Contribution de la consommation Data à la consommation globale (Uniquement pour les offres BUNDLE) | (Somme des équivalents FCFA des MB consommés) / (Somme des valeurs totales en FCFA accordées) |
+3 | - | Contribution de la consommation d'appels à la consommation globale (Uniquement pour les offres MAXI) | (Somme des équivalents FCFA des appels effectués) / (Somme des valeurs totales en FCFA accordées) |
+4 | - | Contribution de la consommation de SMS à la consommation globale (Uniquement pour les offres MAXI) | (Somme des équivalents FCFA des SMS envoyés) / (Somme des valeurs totales en FCFA accordées) |
     
 #### 4. Axes d'Analyse
 - Analyse par
@@ -102,6 +101,8 @@ KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 - Période d'analyse: Mensuelle, trimestrielle, anuelle, personnalisée
 
 #### 5. Règles Métiers
+- Offre MAXI = offre MOBILE ou BUNDLE
+- Offre INTERNET = Offre DATA
 
 ### Question 4: Comment évoluent les performances commerciales des différentes régions et quelles régions présentent des opportunités de développement commercial?
 
@@ -160,18 +161,25 @@ KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 ---------|-----------------------|--------|--------|
 1 | - | L'évolution du nombre d'achats effectués par le client | (Nombre d'achat effectués par le client pendant la période actuelle - Nombre d'achats effectués par le client pendant période précédente) / Nombre d'achats effectués par le client pendant période précédente |
-2 | - | L'évolution de la consommation DATA par le client | (Quantité de MB consommés par le client pendant la période actuelle - Quantité de MB consommés par le client pendant la période précédente) / Quantité de MB consommés par le client pendant la période précédente |
-3 | - | L'évolution de la consommation CALL par le client | (Nombre total de secondes des appels effectués par le client pendant la période actuelle - Nombre total de secondes des appels effectués par le client pendant la période précédente) / Quantité de MB consommés par le client pendant la période précédente |
-4 | - | L'évolution de la consommation SMS par le client | (Nombre total de SMS envoyés par le client pendant la période actuelle - Nombre total de SMS envoyés par le client pendant la période précédente) / Nombre total de SMS envoyés par le client pendant la période précédente |
-5 | - | Effectif des clients présentant des signes de baisse d'activité | Nombre total de clients présentant des signes de baisse d'activité |
-6 | - | Porcentage des clients présentant des signes de baisse d'activité | (Nombre total de clients présentant des signes de baisse d'activité) * 100 / Nombre total de clients actifs |
+2 | - | L'évolution de la consommation DATA du client | (Quantité de MB consommés par le client pendant la période actuelle - Quantité de MB consommés par le client pendant la période précédente) / Quantité de MB consommés par le client pendant la période précédente |
+3 | - | L'évolution de la consommation CALL du client | (Nombre total de secondes des appels effectués par le client pendant la période actuelle - Nombre total de secondes des appels effectués par le client pendant la période précédente) / Quantité de MB consommés par le client pendant la période précédente |
+4 | - | L'évolution de la consommation SMS du client | (Nombre total de SMS envoyés par le client pendant la période actuelle - Nombre total de SMS envoyés par le client pendant la période précédente) / Nombre total de SMS envoyés par le client pendant la période précédente |
+5 | - | Effectif des clients sans activité pendant les deux périodes consécutives d'analyse | Nombre total de clients  sans activité pendant les deux périodes consécutives d'analyse |
+6 | - | Pourcentage des clients sans activité pendant les deux périodes consécutives d'analyse | (Nombre total de clients  sans activité pendant les deux périodes consécutives d'analyse) * 100 / Nombre total de clients analyés |
+7 | - | Effectif des clients avec baisse d'activité | Nombre total de clients avec baisse d'activité |
+8 | - | Pourcentage des clients sans activité pendant les deux périodes consécutives d'analyse | (Nombre total de clients avec baisse d'activité) * 100 / Nombre total de clients analyés |
+9 | - | Effectif des clients avec une activité stable | Nombre total de clients avec une activité stable |
+10 | - | Pourcentage des clients sans activité pendant les deux périodes consécutives d'analyse | (Nombre total de clients avec une activité stable) * 100 / Nombre total de clients analyés |
+
 
 #### 4. Axes d'Analyse
 - L'analyse se fera chaque premier du mois en prenant comme période actuelle du premier au dernier du mois précédent, et comme période précédente du premier au dernier du mois avant.
+- L'analyse se fera uniqement sur les clients actifs dans le lot des clients existants pendant les deux périodes consécutives considérées(période actuelle et précédente).
 
 #### 5. Règles Métiers
 
-1. Un client présentant un signe de baisse d'activité est un client présentant une baisse d'au mois 30% pour au moins deux des 4 KPI 1, 2, 3 et 4 entre les deux périodes considérées.
+1. Un client présentant un signe de baisse d'activité est un client présentant une baisse d'au mois 30% pour au moins deux des 44 KPI 1, 2, 3 et 4 entre les deux périodes consécutives d'analyse considérés.
+2. UN client présentant une activité stable est un client avec baisse de 30% ou plus pour au plus un des 4 KPI 1, 2, 3 et 4 entre les deux périodes consécutives d'analyse considérés.
 
 
 ## Exigences Non Fonctionelles (y compris techniques)
