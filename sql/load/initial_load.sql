@@ -89,7 +89,7 @@ SELECT COUNT(*) FROM staging.purchases;
 INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS(
     SELECT * FROM staging.services_usage AS su WHERE NOT EXISTS (
-        SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id
+        SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id :: TEXT
     )   
 ),
 x AS (
@@ -129,7 +129,8 @@ WITH service_usage_deduplicated AS(
                     SELECT 1 FROM data_quality.issues AS dqi WHERE table_name = 'services_usage'
                                              AND issue_type = 'Uniqueness'
                                              AND dqi.batch_id = su.batch_id
-                                             AND dqi.record_id = su.id)
+                                             AND dqi.record_id = su.id :: TEXT
+                                             )
 ),
 service_usage_aggregated AS(
 SELECT purchase_id, timestamp:: DATE AS usage_date FROM service_usage_deduplicated GROUP BY purchase_id, usage_date

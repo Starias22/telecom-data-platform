@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS data_quality.issues(
         batch_id INT NOT NULL,
         table_name VARCHAR(50) NOT NULL,
         column_name VARCHAR(50),
-        record_id INT NOT NULL,
+        record_id VARCHAR(20) NOT NULL, -- A changer
         issue_type VARCHAR(25) NOT NULL CHECK (issue_type IN('Completness', 'Uniqueness', 'Validity', 'Consistency', 'Referential Integrity')),
         issue_code VARCHAR(50) NOT NULL,
         issue_description TEXT NOT NULL

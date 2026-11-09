@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS dw.dim_date(
 
 CREATE TABLE IF NOT EXISTS dw.dim_offer(
         offer_config_id INT PRIMARY KEY,    
-        offer_id INT NOT NULL, -- not nessasary anymore?
+        offer_id VARCHAR(20) NOT NULL,
         offer_name VARCHAR(50) NOT NULL,
         offer_type VARCHAR(10) NOT NULL,
         offer_category VARCHAR(10) NOT NULL,

@@ -182,7 +182,7 @@ WHERE NOT EXISTS(
     SELECT 1 FROM data_quality.issues AS dqi WHERE table_name = 'services_usage'
                                              AND issue_type = 'Uniqueness'
                                              AND dqi.batch_id = su.batch_id
-                                             AND dqi.record_id = su.id
+                                             AND dqi.record_id = su.id :: TEXT
 
                 )
 ),

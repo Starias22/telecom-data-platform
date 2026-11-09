@@ -1,6 +1,6 @@
 -- !!!  Faut il assigner un  PK aux differentes tables du staging? (Je pense que non, quil faut ls laisser flexibles)
 CREATE TABLE IF NOT EXISTS staging.offers(
-        id INT,
+        id TEXT,
         name TEXT,
         type TEXT,
         price_xof INT,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS staging.offer_billings(
 
 CREATE TABLE IF NOT EXISTS staging.offer_configurations(
         id INT,
-        offer_id INT NOT NULL,
+        offer_id VARCHAR(20) NOT NULL,
         value_xof INT,
         value_mb NUMERIC,
         validity_days INT,
