@@ -1,7 +1,7 @@
 WITH selected_period AS (
 SELECT
-    DATE '2020-06-03' AS start_date,
-    DATE '2020-06-05' + 1 AS end_date -- +1 : end date will be exclusive
+    DATE '2020-06-01' AS start_date,
+    DATE '2020-06-30' AS end_date
 ),
 x AS (
 SELECT
@@ -14,7 +14,7 @@ JOIN dw.dim_date AS dd
     ON dd.date_key = fp.date_key
 JOIN selected_period AS sp
     ON full_date >= sp.start_date -- Period start
-        AND full_date < sp.end_date -- Period end
+        AND full_date <= sp.end_date -- Period end
 GROUP BY customer_segment
 ),
 y AS (
@@ -28,7 +28,7 @@ FROM dw.dim_customer AS dc
 JOIN dw.dim_subscription AS ds ON ds.customer_id = dc.customer_id
 
 JOIN selected_period AS sp
-    ON ds.registration_date < sp.end_date -- Period end
+    ON ds.registration_date <= sp.end_date -- Period end
         AND (
             ds.termination_date IS NULL
             OR ds.termination_date >= sp.start_date -- Period start
@@ -47,7 +47,7 @@ SELECT
     ROUND(
         total_revenue / active_customers_count,
         2
-    ) AS avg_revenue
+    ) AS avg_revenue_per_active_customer
 FROM x
 CROSS JOIN y
 JOIN active_customers_count_by_segment AS accbs

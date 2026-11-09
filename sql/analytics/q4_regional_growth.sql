@@ -1,7 +1,7 @@
 WITH selected_period AS (
 SELECT
-    DATE '2020-06-03' AS start_date,
-    DATE '2020-06-05' + 1 AS end_date, -- +1 : end date will be exclusive
+    DATE '2020-06-01' AS start_date,
+    DATE '2020-06-30' AS end_date,
     'M' AS selection_type
 ),
 current_period_tmp AS (
@@ -55,7 +55,7 @@ SELECT
     dc.customer_id
 FROM dw.dim_subscription AS ds
 JOIN comparaison_periods AS cp
-    ON ds.registration_date < cp.end_date -- end date exclusive
+    ON ds.registration_date <= cp.end_date
         AND (
             termination_date IS NOT NULL
             OR termination_date >= cp.start_date
@@ -83,7 +83,7 @@ JOIN dw.dim_date AS dd
     ON dd.date_key = fp.date_key
 JOIN comparaison_periods AS cp
     ON full_date >= cp.start_date
-        AND full_date < cp.end_date -- end date exclusive
+        AND full_date <= cp.end_date
 JOIN dw.dim_customer AS dc
     ON dc.customer_key = fp.customer_key
 ),
@@ -106,7 +106,7 @@ SELECT
     previous_purchases,
     current_revenue,
     previous_revenue,
-    current_revenue / NULLIF(current_active_customers, 0) AS avg_revenue_by_active_customer
+    current_revenue / NULLIF(current_active_customers, 0) AS avg_revenue_per_active_customer
 FROM active_customers AS ac
 JOIN purchase_metrics AS pm
     ON pm.region = ac.region
@@ -140,7 +140,7 @@ SELECT
     / NULLIF(previous_revenue, 0),
     2
     ) AS revenue_growth_rate,
-    avg_revenue_by_active_customer
+    avg_revenue_per_active_customer
 FROM regional_metrics
 )
 SELECT * FROM regional_growth
