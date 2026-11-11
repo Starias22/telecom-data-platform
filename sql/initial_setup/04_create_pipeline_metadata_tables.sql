@@ -57,6 +57,11 @@ GRANT USAGE ON SCHEMA pipeline_metadata TO data_engineer;
 GRANT INSERT, SELECT, UPDATE ON TABLE pipeline_metadata.batch_logs TO data_engineer;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA pipeline_metadata TO data_engineer;
 
+GRANT USAGE ON SCHEMA analytics TO data_engineer;
+GRANT SELECT, UPDATE ON ALL TABLES IN SCHEMA analytics TO data_engineer;
+
+
+
 
 TRUNCATE pipeline_metadata.batch_logs  RESTART IDENTITY;
 
