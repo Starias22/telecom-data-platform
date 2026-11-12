@@ -217,7 +217,7 @@ SELECT batch_id,  'services_usage', NULL, id, 'Validity', 'SERVICE_USAGE_INVALID
 -- Uniqueness (On ne peut pas avoir deux enregistrements d'utlisation de service de communication téléphonique pour un meme achat dune meme souscription a une meme heur et pour un meme service)
 SELECT batch_id,  'services_usage', NULL, id, 'Uniqueness', 'DUPLICATE_SERVICE_USAGE_RECORD', CONCAT('Multiple records for the same service usage event (', duplicated_rows_count, ' records)') FROM service_usage_count WHERE duplicated_rows_count > 1 UNION ALL -- Keep the first row and reject all the others
 -- Consistency(cohérence)
-SELECT su.batch_id,  'services_usage', NULL, p.id, 'Consistency', 'SERVICE_USAGE_DATE_ AND_PURCHASE_DATE_INCOHERENT', 'A service used before its offer has been purchased' FROM current_batch_services_usage AS su JOIN staging.purchases AS p ON p.id = su.purchase_id WHERE  su.timestamp < p.purchased_at  UNION ALL
+SELECT su.batch_id,  'services_usage', NULL, p.id, 'Consistency', 'SERVICE_USAGE_DATE_AND_PURCHASE_DATE_INCOHERENT', 'A service used before its offer has been purchased' FROM current_batch_services_usage AS su JOIN staging.purchases AS p ON p.id = su.purchase_id WHERE  su.timestamp < p.purchased_at  UNION ALL
 SELECT su.batch_id,  'services_usage', NULL, su.id, 'Consistency', 'SERVICE_USAGE_DATE_AND_TERMINATION_DATE_INCOHERENT', 'A service used after the corresponding subscription has been terminated' FROM current_batch_services_usage AS su JOIN staging.subscriptions AS s ON s.id = su.subscription_id WHERE  su.timestamp > s.termination_date  UNION ALL
 -- Referential Integrity
 -- Cest quoi la meilleure approche pour ceci? EXISTS ou bien LEFT JOIN? Bien maitriser aussi laproche LEFT JOIn et ausi les ani semi join
