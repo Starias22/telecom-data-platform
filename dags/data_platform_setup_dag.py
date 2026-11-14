@@ -2,6 +2,8 @@
 
 from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
+from airflow.exceptions import AirflowSkipException
+
 
 from config.config import SETUP_COMPLETED, INITIALIZED
 
@@ -12,6 +14,20 @@ from dags.utils.pipeline_factory import DEFAULT_ARGS
 logger = get_logger(__name__)
 
 
+def check_data_platform_setup_execution():
+        platform_state = get_platform_state()
+        if platform_state == SETUP_COMPLETED:
+                logger.info("")
+                raise AirflowSkipException(
+                                "Platform setup already performed. Skipping setup."
+                          )
+        elif platform_state == INITIALIZED:
+                raise AirflowSkipException(
+                                                "Platform setup already performed (Platform even initialized). Skipping setup."
+                                          )
+
+        
+
 def setup_data_platform():
         platform_state = get_platform_state()
         if platform_state == SETUP_COMPLETED:
@@ -20,7 +36,9 @@ def setup_data_platform():
                 logger.info("Platform setup already performed (Platform even initialized). Skipping setup.")
         
         else:
-                setup_platform_database()
+                logger.info("Setting up platform database (ben_telecom_data_platform)")
+                output = setup_platform_database()
+                logger.info(output)
 
 
 with DAG(
@@ -29,7 +47,13 @@ with DAG(
         default_args=DEFAULT_ARGS
 
 ):
-        setup_platform_task = PythonOperator(
+        
+        check_data_platform_setup_execution_task = PythonOperator(
+                task_id="check_data_platform_setup_execution",
+                python_callable=check_data_platform_setup_execution
+        )
+        setup_data_platform_task = PythonOperator(
                 task_id="setup_data_platform",
                 python_callable=setup_data_platform
         )
+        check_data_platform_setup_execution_task >> setup_data_platform_task
