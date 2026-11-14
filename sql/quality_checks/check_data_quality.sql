@@ -4,7 +4,10 @@ BEGIN;
 -- !!!avoid duplicates ... batch
 -- !!! Suquery vs JOIN  quand faire quoi
 
-SELECT CONCAT('Data quality check for batch ', :'batch_id');
+\echo '\nData quality checks for batch ':batch_id
+
+\echo '------------------------------------------------------------'
+\echo 'Creating temporary tables for the current batch'
 
 CREATE TEMP TABLE current_batch_offers AS(
 SELECT * FROM staging.offers WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
@@ -36,10 +39,12 @@ CREATE TEMP TABLE current_batch_services_usage AS(
 SELECT * FROM staging.services_usage WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
 );
 
+\echo '------------------------------------------------------------'
+\echo 'Performing Data Standardization'
 
 /*Table offers*/
 UPDATE current_batch_offers SET name = INITCAP(TRIM(name)),
-type = UPPER((TRIM(type)));
+category = UPPER((TRIM(category)));
 
 /*Table billings (N/A)*/
 
@@ -63,6 +68,8 @@ SET purchase_channel = UPPER(TRIM(purchase_channel)),
 payment_method = UPPER(TRIM(payment_method));
 
 
+\echo '------------------------------------------------------------'
+\echo 'Quality checks for offers'
 
 /*Table: offers*/
 WITH offers_count_by_name AS (
@@ -73,7 +80,7 @@ INSERT INTO data_quality.issues (batch_id, table_name, column_name, record_id, i
 SELECT batch_id,  'offers', 'start_date', id, 'Completness', 'OFFER_START_DATE_NULL', 'The start date of the offer is NULL' FROM current_batch_offers WHERE start_date IS NULL UNION ALL
 SELECT batch_id,  'offers', 'created_at', id, 'Completness', 'OFFER_CREATED_AT_NULL', 'The creation date of the offer is NULL' FROM current_batch_offers WHERE created_at IS NULL UNION ALL
 -- Validity
-SELECT batch_id,  'offers', 'type', id, 'Validity', 'OFFER_TYPE_INVALID', 'The type of offer is invalid' FROM current_batch_offers WHERE UPPER(type) NOT IN('DATA', 'MOBILE', 'BUNDLE') UNION ALL
+SELECT batch_id,  'offers', 'type', id, 'Validity', 'OFFER_CATEGORY_INVALID', 'The category of the offer is invalid' FROM current_batch_offers WHERE category NOT IN('DATA', 'VOICE_SMS', 'BUNDLE') UNION ALL
 SELECT batch_id,  'offers', 'price_xof', id, 'Validity', 'OFFER_PRICE_INVALID', 'The price of the offer is invalid' FROM current_batch_offers WHERE price_xof < 0 UNION ALL
 -- Uniqueness
 SELECT batch_id,  'offers', NULL, id, 'Uniqueness', 'OFFER_NAME_DUPLICATED', CONCAT('The name of the offer is duplicated (', offers_count,' records)') FROM offers_count_by_name WHERE rn > 1 UNION ALL -- Keep the first row and reject all the others
@@ -82,6 +89,8 @@ SELECT batch_id,  'offers', NULL, id, 'Consistency', 'OFFER_AVAILABILITY_DATES_I
 SELECT batch_id,  'offers', NULL, id, 'Consistency', 'OFFER_TRACK_DATES_INCOHERENT', 'The date of last update of the data is prior to the date of creation' FROM current_batch_offers WHERE updated_at < created_at;
 
 
+\echo '------------------------------------------------------------'
+\echo 'Quality checks for offer billings'
 /*Table: offer_billings*/
 WITH offer_billings_count_by_params AS (
 SELECT batch_id, id, COUNT(*) OVER(w) AS offer_billings_count, ROW_NUMBER() OVER(w) AS rn  FROM current_batch_offer_billings
@@ -102,6 +111,8 @@ SELECT batch_id,  'offer_billings', NULL, id, 'Consistency', 'OFFER_BILLING_TRAC
 
 
 
+\echo '------------------------------------------------------------'
+\echo 'Quality checks for offer configurations'
 /*Table: offer_configurations*/
 INSERT INTO data_quality.issues (batch_id, table_name, column_name, record_id, issue_type, issue_code, issue_description)
 -- Completness
@@ -120,6 +131,8 @@ SELECT batch_id,  'offer_configurations', 'offer_id', id, 'Referential Integrity
 SELECT batch_id,  'offer_configurations', 'offer_id', id, 'Referential Integrity', 'OFFER_BILLING_ID_NOT_IN_OFFER_BILLINGS_TABLE', 'The offer billing id of the configured offer is not available in the offer billings table' FROM current_batch_offer_configurations AS oc WHERE billing_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM staging.offer_billings AS ob WHERE  ob.id = oc.billing_id);
 
 
+\echo '------------------------------------------------------------'
+\echo 'Quality checks for customers'
 /*Table: customers : Customer city invalid(typo), customer segment NULL*/
 INSERT INTO data_quality.issues (batch_id, table_name, column_name, record_id, issue_type, issue_code, issue_description)
 -- Completness
@@ -147,6 +160,8 @@ SELECT batch_id,  'customers', NULL, id, 'Consistency', 'CUSTOMER_REG_AND_TERMIN
 SELECT batch_id,  'customers', NULL, id, 'Consistency', 'CUSTOMER_TRACK_DATES_INCOHERENT', 'The date of last update of the customer is prior to his registration date' FROM current_batch_customers WHERE updated_at < registration_date;
 
 
+\echo '------------------------------------------------------------'
+\echo 'Quality checks for subscriptions'
 /*Table: Subscriptions*/
 -- Later update the generator to support the case a customer that onnce used a phone number thta is beeing used by another
 WITH subscriptions_count_by_phone_number_and_customer AS (
@@ -173,6 +188,8 @@ SELECT batch_id,  'subscriptions', NULL, id, 'Consistency', 'SUBSCRIPTION_TRACK_
 SELECT batch_id,  'subscriptions', 'customer_id', id, 'Referential Integrity', 'CUSTOMER_ID_NOT_IN_CUSTOMERS_TABLE', 'The customer id is not available in customers table' FROM current_batch_subscriptions AS s WHERE NOT EXISTS(SELECT 1 FROM staging.customers AS c WHERE  c.id = s.customer_id);
 
 
+\echo '------------------------------------------------------------'
+\echo 'Quality checks for purchases'
 /*Table: Purchases*/
 INSERT INTO data_quality.issues (batch_id, table_name, column_name, record_id, issue_type, issue_code, issue_description)
 -- Completness
@@ -196,6 +213,8 @@ SELECT batch_id,  'purchases', 'subscription_id', id, 'Referential Integrity', '
 SELECT batch_id,  'purchases', 'offer_config_id', id, 'Referential Integrity', 'OFFER_CONFIG_ID_NOT_IN__TABLE', 'The subscriptionid is not available in subscriptions table' FROM current_batch_purchases AS p WHERE NOT EXISTS(SELECT 1 FROM staging.subscriptions AS s WHERE  s.id = p.subscription_id);
 
 
+\echo '------------------------------------------------------------'
+\echo 'Quality checks for service usage'
 /*Table: services_usage*/
 WITH service_usage_count AS (
 SELECT batch_id, id, COUNT(*) OVER(w) AS duplicated_rows_count, ROW_NUMBER() OVER(w) AS duplicated_row_number FROM current_batch_services_usage AS su
@@ -224,6 +243,8 @@ SELECT su.batch_id,  'services_usage', NULL, su.id, 'Consistency', 'SERVICE_USAG
 SELECT batch_id,  'services_usage', 'purchase_id', id, 'Referential Integrity', 'PURCHASE_ID_NOT_IN_SUBSCRIPTIONS_TABLE', 'The purchase id is not available in subscriptions table' FROM current_batch_services_usage AS su WHERE NOT EXISTS(SELECT 1 FROM staging.subscriptions AS s WHERE  s.id = su.subscription_id) UNION ALL
 SELECT batch_id,  'services_usage', 'subscription_id', id, 'Referential Integrity', 'SUBSCRIPTION_ID_NOT_IN_SUBSCRIPTIONS_TABLE', 'The subscription id is not available in subscriptions table' FROM current_batch_services_usage AS su WHERE NOT EXISTS(SELECT 1 FROM staging.subscriptions AS s WHERE  s.id = su.subscription_id);
 
+\echo '------------------------------------------------------------'
+\echo 'Data quality issues summary'
 -- Summarize data quality issues
 SELECT DISTINCT issue_type, issue_code FROM data_quality.issues WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[]);
 

@@ -1,6 +1,9 @@
 BEGIN;
 
 -- !!! Later : code pour eviter qu'un achat deja existant se charge plusieurs fois
+
+\echo '------------------------------------------------------------'
+\echo 'Creating temporary tables for the current batch'
 CREATE TEMP TABLE current_batch_offers AS(
 SELECT * FROM staging.offers WHERE batch_id = ANY(STRING_TO_ARRAY(:'batch_id', ',')::INT[])
 );
@@ -34,7 +37,13 @@ SELECT * FROM staging.services_usage WHERE batch_id = ANY(STRING_TO_ARRAY(:'batc
 -- dim_date (Already loaded initially)
 
 -- Dim offer (Je suppose SCD 1 donc en cas de changement juste updte): Je considere seuelemt le nom de loffre, sa date de debut et de fin (date de debut et de fin de loffre configuree), comme SCD1 et tous les autres attributs comme SCD 0 (vu que la source possede start date et end date, une nouvelle offre est creer lorsuqe les autres attributs changent) 
+
+\echo '------------------------------------------------------------'
+\echo 'Loading dim_offer'
+
+
 -- 1. Mettre a jour le nom pour toutes les offres du DW dont le nom a change dans le batch courant
+\echo 'Updating SCD 1 attributes for dim_offer (offer_name, offer_start_date, offer_end_date)'
 UPDATE dw.dim_offer AS dof
 SET offer_name = o.name
 -- FROM staging.offer_configurations AS oc
@@ -59,13 +68,15 @@ oc.id = dof.offer_config_id AND
       );
 
 -- 2. Inserer les nouvelles offres (ceux qui ne sont pas encore dans le DW)
-INSERT INTO dw.dim_offer(offer_config_id, offer_id, offer_name, offer_type, offer_category, validity_days, is_limitless, price_xof, value_xof, value_mb, xof_per_call_second, xof_per_sms_sent, xof_per_mb_used, offer_start_date, offer_end_date)
-SELECT oc.id AS offer_config_id,  o.id AS offer_id, o.name AS offer_name, o.type AS offer_type,
+\echo '------------------------------------------------------------'
+\echo 'Inserting new offers into dim_offer'
+INSERT INTO dw.dim_offer(offer_config_id, offer_id, offer_name, offer_category, offer_family, validity_days, is_limitless, price_xof, value_xof, value_mb, xof_per_call_second, xof_per_sms_sent, xof_per_mb_used, offer_start_date, offer_end_date)
+SELECT oc.id AS offer_config_id,  o.id AS offer_id, o.name AS offer_name, o.category AS offer_category,
 CASE
-WHEN o.name ILIKE '%libre%' THEN 'OPTION LIBRE'
-WHEN o.name ILIKE 'défaut' THEN 'OFFRE PAR DEFAUT'
+WHEN o.name ILIKE '%libre%' THEN 'INTERNET'
+WHEN o.name ILIKE 'défaut' THEN 'MAXI'
 ELSE UPPER((STRING_TO_ARRAY( o.name , ' '))[2])
-END AS offer_category, 
+END AS offer_family,  
 oc.validity_days, oc.is_limitless, o.price_xof, oc.value_xof, oc.value_mb, ob.xof_per_second AS xof_per_call_second, ob.xof_per_sms AS xof_per_sms_sent, ob.xof_per_mb AS xof_per_mb_used, oc.start_date AS offer_start_date, oc.end_date AS offer_end_date
 FROM current_batch_offer_configurations AS oc
 -- FROM staging.offer_configurations AS oc
@@ -78,6 +89,8 @@ WHERE dof.offer_config_id IS NULL; -- Les offres qui ne sont pas dans le DW
 -- Dim customer
 
 -- 1. Mettre a jour dans dim_customer les clients (avec toutes leurs versions) pour lesquels des attributs SCD 1 (gender, registration date et termination date) ont changé, avec leurs lignes correspondantes dans le staging
+\echo '------------------------------------------------------------'
+\echo 'Updating SCD 1 attributes for dim_customer (gender, registration_date, termination_date)'
 UPDATE dw.dim_customer AS dc
 SET gender = c.gender, 
     registration_date = c.registration_date,
@@ -91,6 +104,8 @@ WHERE c.id = dc.customer_id -- La ligne correspondante a la ligne courante dans 
       );
 
 -- 2. Fermer toutes les versions courantes pour les clients dont des attributs SCD 2 (city, type, segment, status) ont changé
+\echo '------------------------------------------------------------'
+\echo 'Closing in dim_customers all current versions for customers whose SCD attributes (one or many attributes) have changed (city, type, segment, status)'
 UPDATE dw.dim_customer AS dc
 SET valid_to = CURRENT_TIMESTAMP,
     is_current = FALSE
@@ -104,7 +119,8 @@ WHERE c.id = dc.customer_id
       );
 
 -- 3. Insérer les nouveaux clients ainsi que les nouvelles versions de clients (les clients du staging qui nont aucune version courante dans le DW)
-
+\echo '------------------------------------------------------------'
+\echo 'Inserting new customers and new versions of customers into_dim_customer'
 INSERT INTO dw.dim_customer(customer_id, customer_city, customer_department, customer_segment, customer_type, gender, registration_date, status, termination_date, valid_from, is_current)
 SELECT c.id AS customer_id,
 COALESCE(rc.city, 'Unkown ('|| c.city || ')') AS customer_city,
@@ -133,6 +149,8 @@ WHERE dc.customer_id IS NULL; -- Les clients du staging qui nont aucune version 
 
 -- Dim subscription
 -- 1. Update in the dw all records of subscription having change for at least one SCD 1 attribute
+\echo '------------------------------------------------------------'
+\echo 'Updating SCD 1 attributes for dim_subscription (registration date, termination date)'
 UPDATE dw.dim_subscription AS ds
 SET registration_date = s.registration_date,
     termination_date = s.termination_date
@@ -144,6 +162,8 @@ WHERE s.id = ds.subscription_id
       );
 
 -- 2. Insert new records of subscriptions (subscriptions that did not exist in the dw)
+\echo '------------------------------------------------------------'
+\echo 'Inserting new records of subscriptions into dim_subscription'
 INSERT INTO dw.dim_subscription(subscription_id, customer_id, registration_date, termination_date)
 SELECT id, customer_id, registration_date, termination_date
 FROM current_batch_subscriptions AS s
@@ -152,6 +172,8 @@ WHERE NOT EXISTS (
 );
 
 -- Fact purchase
+\echo '------------------------------------------------------------'
+\echo 'Populating fact_purchase'
 INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_config_id, revenue)
 WITH x AS (SELECT
     p.id AS purchase_id,
@@ -174,6 +196,8 @@ SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS date_key, customer
 
 -- Fact consumption
 -- SELECT * FROM current_batch_services_usage;
+\echo '------------------------------------------------------------'
+\echo 'Populating fact_consumption'
 INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS (
 -- SELECT * FROM staging.services_usage AS su

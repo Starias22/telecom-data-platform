@@ -1,4 +1,8 @@
+BEGIN;
+
 -- dim_date
+\echo '------------------------------------------------------------'
+\echo 'Populating dim_date'
 INSERT INTO dw.dim_date(date_key, full_date, formatted_date, day_of_week_num, day_of_week_name, day_of_week_name_short, day_of_month, day_of_year, month_num, month_name, month_name_short, quarter_num, quarter_name, quarter_name_short, year)
 WITH dates_range AS(
 SELECT GENERATE_SERIES(DATE '2020-01-01', DATE '2030-12-31', INTERVAL '1 day') AS date
@@ -20,13 +24,15 @@ EXTRACT(QUARTER FROM date) AS quarter_num,
 EXTRACT(YEAR FROM date) AS year FROM dates_range;
 
 -- Dim offer
-INSERT INTO dw.dim_offer(offer_config_id, offer_id, offer_name, offer_type, offer_category, validity_days, is_limitless, price_xof, value_xof, value_mb, xof_per_call_second, xof_per_sms_sent, xof_per_mb_used, offer_start_date, offer_end_date)
-SELECT oc.id AS offer_config_id,  o.id AS offer_id, o.name AS offer_name, o.type AS offer_type, 
+\echo '------------------------------------------------------------'
+\echo 'Populating dim_offer'
+INSERT INTO dw.dim_offer(offer_config_id, offer_id, offer_name, offer_category, offer_family, validity_days, is_limitless, price_xof, value_xof, value_mb, xof_per_call_second, xof_per_sms_sent, xof_per_mb_used, offer_start_date, offer_end_date)
+SELECT oc.id AS offer_config_id,  o.id AS offer_id, o.name AS offer_name, o.category AS offer_category, 
 CASE
-WHEN o.name ILIKE '%libre%' THEN 'OPTION LIBRE'
-WHEN o.name ILIKE 'défaut' THEN 'OFFRE PAR DEFAUT'
+WHEN o.name ILIKE '%libre%' THEN 'INTERNET'
+WHEN o.name ILIKE 'défaut' THEN 'MAXI'
 ELSE UPPER((STRING_TO_ARRAY( o.name , ' '))[2])
-END AS offer_category, 
+END AS offer_family, 
 oc.validity_days, oc.is_limitless, o.price_xof, oc.value_xof, oc.value_mb, ob.xof_per_second AS xof_per_call_second, ob.xof_per_sms AS xof_per_sms_sent, ob.xof_per_mb AS xof_per_mb_used, oc.start_date AS offer_start_date, oc.end_date AS offer_end_date
 FROM staging.offer_configurations AS oc
 LEFT JOIN staging.offer_billings AS ob on ob.id = oc.billing_id -- Left JOIN to also consider offers without billing
@@ -39,6 +45,8 @@ SELECT COUNT(*) FROM staging.offer_configurations;
 
 
 -- Dim customer
+\echo '------------------------------------------------------------'
+\echo 'Populating dim_customer'
 INSERT INTO dw.dim_customer(customer_id, customer_city, customer_department, customer_segment, customer_type, gender, registration_date, status, termination_date, valid_from, is_current)
 SELECT c.id AS customer_id, 
 COALESCE(cities.city, 'Unkown ('|| c.city || ')') AS customer_city,
@@ -60,6 +68,8 @@ SELECT COUNT(*) FROM staging.customers;
 
 
 -- Dm subscription
+\echo '------------------------------------------------------------'
+\echo 'Populating dim_subscription'
 INSERT INTO dw.dim_subscription(subscription_id, customer_id, registration_date, termination_date)
 SELECT id, customer_id, registration_date, termination_date
 FROM staging.subscriptions;
@@ -69,6 +79,8 @@ SELECT COUNT(*) FROM staging.subscriptions;
 
 
 -- Fact purchase
+\echo '------------------------------------------------------------'
+\echo 'Populating fact_purchase'
 INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_config_id, revenue)
 WITH purchase_details AS(
 SELECT p.id AS purchase_id, purchased_at::DATE AS purchase_date, customer_key, s.customer_id, dc.valid_from, dc.valid_to, p.offer_config_id, price_xof AS revenue
@@ -86,6 +98,8 @@ SELECT COUNT(*) FROM staging.purchases;
 
 
 -- Fact consumption
+\echo '------------------------------------------------------------'
+\echo 'Populating fact_consumption'
 INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS(
     SELECT * FROM staging.services_usage AS su WHERE NOT EXISTS (
@@ -138,3 +152,4 @@ SELECT purchase_id, timestamp:: DATE AS usage_date FROM service_usage_deduplicat
 SELECT COUNT(*) FROM service_usage_aggregated;
 SELECT COUNT(*) FROM dw.fact_consumption;
 
+COMMIT;
