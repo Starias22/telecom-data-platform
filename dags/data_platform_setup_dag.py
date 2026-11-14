@@ -24,21 +24,12 @@ def check_data_platform_setup_execution():
         elif platform_state == INITIALIZED:
                 raise AirflowSkipException(
                                                 "Platform setup already performed (Platform even initialized). Skipping setup."
-                                          )
-
-        
+                                          )     
 
 def setup_data_platform():
-        platform_state = get_platform_state()
-        if platform_state == SETUP_COMPLETED:
-                logger.info("Platform setup already performed. Skipping setup.")
-        elif platform_state == INITIALIZED:
-                logger.info("Platform setup already performed (Platform even initialized). Skipping setup.")
-        
-        else:
-                logger.info("Setting up platform database (ben_telecom_data_platform)")
-                output = setup_platform_database()
-                logger.info(output)
+        logger.info("Setting up platform database (ben_telecom_data_platform)")
+        output = setup_platform_database()
+        logger.info(output)
 
 
 with DAG(
