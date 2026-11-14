@@ -4,6 +4,9 @@ import subprocess
 from config.config import HOST, USER, get_staging_params, DATA_PLATFORM_DB
 
 from src.utils.logger import get_logger
+from src.utils.psql_client import PsqlClient
+from src.utils.utils import get_num_records
+import pandas as pd
 
 logger = get_logger(__name__)
 
@@ -11,10 +14,12 @@ def move_to_staging(staging_raw_data_dir):
 
         queries = []
         STAGING_PARAMS = get_staging_params(staging_raw_data_dir)
+        tables_list = []
         
         
         for i in STAGING_PARAMS.values():
                 table = i["table"]
+                tables_list.append(table)
                 file_path = i["file_path"]
                 if not file_path.exists():
                         logger.warning(f"No data to move to {table}")
@@ -49,26 +54,21 @@ def move_to_staging(staging_raw_data_dir):
 
         print(query)
         
+        output = PsqlClient(
+                       user=USER,
+                       host=HOST,
+                       db=DATA_PLATFORM_DB
+               ).execute(
+                       input=query
+               )
+        num_records = get_num_records(output) # Take just offers, billings, offer configs, customers, and subscriptions
+        print(output)
+        print(tables_list)
+        print(num_records)
 
-        command = [
-                "psql",
-                "-U", USER,
-                "-h", HOST,
-                "-d", DATA_PLATFORM_DB,
+        num_records_df = pd.DataFrame({"Table":tables_list, "Num records moved": num_records})
+        logger.info(f"\nReport of the data moved from Raw to Staging:\n {num_records_df.to_string(index=False)}\n {'-' * 100}")
         
-        ]
-        print(command)
         
-
-        try:
-               subprocess.run(command, input=query, capture_output=True, text=True)
-        except subprocess.CalledProcessError as e:
-                error_message = e.stderr
-                raise RuntimeError(error_message) from e
-        # !!!later :  ahndle errors and get th eouptut to ... the number of records extracted CompletedProcess(args=['psql', '-U', 'starias22', '-h', 'localhost', '-d', 'ben_telecom'], returncode=0, stdout='COPY 28\nCOPY 15\nCOPY 0\nCOPY 5000000\nCOPY 5928704\n', stderr='')
-        # !!!Handle it so that the password wll not be prompted fro the command line
-
-
-        return
 
 # move_to_staging("/home/starias/myprojects/telecom-offer-performance-analytics-platform/data/raw/2026-10-14")

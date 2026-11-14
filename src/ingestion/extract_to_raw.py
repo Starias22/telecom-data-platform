@@ -12,9 +12,11 @@ from config.paths import PURCHASES_DIR
 from config.column_names import PURCHASE_ID_COL, SUBSCRIPTION_ID_COL, TIMESTAMP_MILLISECONDS_COL, SERVICE_TYPE_COL, DATA_MB_COL, SMS_COUNT_COL, CALL_SECONDS_COL, MESSAGE_PARTITION_COL, MESSAGE_OFFSET_COL, BATCH_ID_COL
 from config.config import get_extraction_params, TRX_DB_NAME, HOST, USER, KAFKA_SERVERS, KAFKA_TOPIC
 import csv
-from src.utils.utils import fmt_datetime
+from src.utils.psql_client import PsqlClient
+from src.utils.utils import fmt_datetime, get_num_records
 
 from src.utils.logger import get_logger
+
 
 logger = get_logger(__name__)
 
@@ -31,42 +33,39 @@ def extract_from_db_table(batch_id, extraction_output_dir, table_name, watermark
     
     EXTRACTION_PARAMS = get_extraction_params(extraction_output_dir)
     
-
-    
     extraction_params = EXTRACTION_PARAMS[table_name]
     table = extraction_params["query_table"]
     last_update_date = extraction_params["update_date_col"]
     output_path = extraction_params["output_path"]
     
-
     makedirs(extraction_output_dir, exist_ok=True)
     output_path = str(output_path)
     temp_output_file = str(output_path) + ".tmp"
-    query = f"""\\copy ( SELECT *, {int(batch_id)} AS batch_id FROM {table} WHERE {last_update_date} > '{watermark}' AND {last_update_date} <= '{extraction_cut_off_date}' ) TO '{temp_output_file}' WITH (FORMAT CSV, HEADER TRUE)"""
+    query = f"""
+    \\copy ( SELECT *, {int(batch_id)} AS batch_id FROM {table} WHERE {last_update_date} > '{watermark}' AND {last_update_date} <= '{extraction_cut_off_date}' ) TO '{temp_output_file}' WITH (FORMAT CSV, HEADER TRUE)
+    """
     print(query)
-    command = [
-                        "psql",
-                        "-U", USER,
-                        "-h", HOST,
-                        "-d", TRX_DB_NAME
-                ]    
+    
     try:
-        subprocess.run(
-        command, input=query,
-          capture_output=True,
-            text=True)
-        if is_csv_empty(temp_output_file):
-           logger.warning(f"No data extracted from table {table_name} (so temporary CSV file removed)")
+        output = PsqlClient(
+              user=USER,
+              host=HOST,
+              db=TRX_DB_NAME
+        ).execute(input=query)
+
+        num_records_extracted = get_num_records(output)[0]
+        if num_records_extracted == 0:
+           logger.warning(f"No data extracted from table {table_name} (so temporary CSV file has been removed)")
            os.remove(temp_output_file)
            return
+                           
         os.rename(temp_output_file, output_path)
+        logger.info(f"{num_records_extracted} records extracted from table {table_name}\n {'-' * 100}")
+        
+       
     except subprocess.CalledProcessError as e:
           os.remove(temp_output_file)
           raise RuntimeError(e.stderr) from e
-    
-    
-    
-
 
 def extract_purchases(extraction_output_dir, batch_id, watermark, extraction_cut_off_date):
         try:
@@ -96,19 +95,29 @@ def extract_purchases(extraction_output_dir, batch_id, watermark, extraction_cut
 
               output_file_path = f"{extraction_output_dir}/purchases.csv"
               temp_output_file = output_file_path + ".tmp"
+              
+              makedirs(extraction_output_dir, exist_ok=True)
 
-              query = f"""COPY(
-                SELECT *, {int(batch_id)} AS batch_id FROM read_parquet(?)
-                )
-                TO '{temp_output_file}'
-                WITH (FORMAT CSV, HEADER TRUE);
+
+              # query = f"""COPY(
+              query = f"""CREATE TEMP TABLE extracted_purchases AS
+                SELECT *, {int(batch_id)} AS batch_id FROM read_parquet({files_to_extract}
+                );
                 """
               print(query)
-              makedirs(extraction_output_dir, exist_ok=True)
-              connection.execute(query, [files_to_extract]
-                )
+               
+              connection.execute(query)
+              num_purchases = connection.execute("SELECT COUNT(*) FROM extracted_purchases").fetchone()[0]
+              
+              connection.execute(f"""
+                    COPY extracted_purchases
+                    TO '{temp_output_file}'
+                    WITH (FORMAT CSV, HEADER TRUE);
+                                 """)
+              
               connection.close()
               os.rename(temp_output_file, output_file_path)
+              logger.info(f"{num_purchases} records of purchases extracted\n {'-' * 100}")
         except Exception as e:
               os.remove(temp_output_file)
               raise RuntimeError(str(e)) from e
@@ -156,7 +165,7 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
                        
             usage_df[BATCH_ID_COL] = int(batch_id)
 
-            print(usage_df)
+            # print(usage_df)
             # !!! Later handle scalability for ex by usin chuncsize? and avoid stroing all  the usage_df.... in the memory
             ### !!!Hqndle cqse zhere there is no record fethec
 
@@ -167,6 +176,7 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
             consumer.commit()
             consumer.close()
             logger.info("Offsets committed to Kafka, and connection closed")
+            logger.info(f"{len(usage_df)} records of service usage extracted\n {'-' * 100}")
         except (BrokerNotAvailableError, KafkaTimeoutError) as e:
                
                error_message = str(e)
@@ -183,4 +193,5 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
 
 if __name__ == "__main__":
         # extract_purchases()
+        print("Testing")
         pass

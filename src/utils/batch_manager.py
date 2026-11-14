@@ -1,10 +1,13 @@
-from config.config import BATCH_LOGS_TABLE, BATCH_STATUS_COL, RUNNING,SUCCES, BATCH_ID_COL, STARTED_AT, COMPLETED_AT, BATCH_ERROR_MESSAGE_COL, PLATFORM_INITIALIZATION_NOT_DONE_OR_INCOMPLET, PLATFORM_INITIALIZATION_SUCCESSFUL, PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET, BATCH_TYPE_COL
-from datetime import date
+from config.config import BATCH_LOGS_TABLE, BATCH_STATUS_COL, RUNNING,SUCCES, BATCH_ID_COL, STARTED_AT, COMPLETED_AT, BATCH_ERROR_MESSAGE_COL
 from src.utils.db_connector import get_connection
 from src.utils.platform_manager import mark_platform_initialized
-from psycopg.errors import UndefinedTable
+
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 def start_batch():
+        logger.info("Starting batch")
         connection = get_connection()
         query = f"""
                 INSERT INTO {BATCH_LOGS_TABLE} ({BATCH_STATUS_COL}) VALUES ('{RUNNING}') RETURNING {BATCH_ID_COL}, {STARTED_AT};
@@ -18,13 +21,15 @@ def start_batch():
                 batch_id= cursor.fetchone()[0]
                 
                 connection.commit()
-                result = { "batch_id":batch_id,
-                        }
+                logger.info(f"Batch {batch_id} started")
+                
                 return batch_id
         
         
 
 def complete_batch(batch_id, termination_status = SUCCES, platform_initialization=None):
+
+        logger.info(f"Completing batch {batch_id}")
         connection = get_connection()
         query = f"""
         UPDATE {BATCH_LOGS_TABLE}
@@ -42,8 +47,10 @@ def complete_batch(batch_id, termination_status = SUCCES, platform_initializatio
                 connection.commit()
         if platform_initialization:
                 mark_platform_initialized(connection)
-                
-                return finished_at
+        logger.info(
+                f"Batch {batch_id} completed"
+                )                
+        return finished_at
         
 
 def mark_batch_as_failed(batch_id, error_message):
@@ -67,7 +74,7 @@ def mark_batch_as_failed(batch_id, error_message):
                 )
                 # finished_at = cursor.fetchone()[0]
                 connection.commit()
-                # return finished_at
+                logger.info(f"Batch {batch_id} marked as failed")
 
 if __name__ == "__main__":
         batch_id = 20

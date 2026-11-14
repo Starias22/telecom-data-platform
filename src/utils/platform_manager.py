@@ -9,12 +9,12 @@ from src.utils.db_connector import get_connection
 from psycopg.errors import UndefinedTable, OperationalError
 
 from src.utils.logger import get_logger
+from src.utils.psql_client import PsqlClient
 
 logger = get_logger(__name__)
-print(logger)
-
 
 def get_platform_state():
+    logger.info("Getting platform state")
     try:
         connection = get_connection()
        
@@ -32,24 +32,21 @@ def get_platform_state():
                        return PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET
     except UndefinedTable as e:
               return PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET
-    return platform_state # Setep copleted / Initialized
+    return platform_state # Setup completed / Initialized
 
 def is_platform_setup():
      platform_sate = get_platform_state()
      return platform_sate in [ SETUP_COMPLETED, INITIALIZED]
 
 def setup_platform_database():
-        load_dotenv(ENV_FILE_PATH)
-        env = os.environ.copy()
-        subprocess.run(
-                [
-                        "psql",
-                        "-h", HOST,
-                        "-U", USER,
-                        "-f", SQL_INITIAL_SETUP_MAIN_FILE_PATH
-                ],
-                env=env
-        )
+    load_dotenv(ENV_FILE_PATH)
+    env = os.environ.copy()
+
+    return PsqlClient(user=USER,
+                             host=HOST,
+                             env=env
+                             ).execute(
+                                    SQL_INITIAL_SETUP_MAIN_FILE_PATH, is_sql_file=True)
 
 def mark_platform_initialized(connection):
         query = f"""
@@ -60,6 +57,8 @@ def mark_platform_initialized(connection):
         with connection.cursor() as cursor:
                cursor.execute(query)
                connection.commit()
+        logger.info("Platform marked as initialized")
 
 if __name__ ==  "__main__":
-       pass
+       output = setup_platform_database()
+       print(output)

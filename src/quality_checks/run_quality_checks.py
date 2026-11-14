@@ -5,32 +5,26 @@ from dotenv import load_dotenv
 
 from config.paths import SQL_INITIAL_SETUP_MAIN_FILE_PATH, ENV_FILE_PATH, SQL_QUALITY_CHECKS_FILE_PATH
 from config.config import HOST, DATA_PLATFORM_DB, USER
+from src.utils.psql_client import PsqlClient
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 load_dotenv(ENV_FILE_PATH)
 env = os.environ.copy()
 
 def check_quality(batch_id=1):
-        try:
-            result = subprocess.run(
-                [
-                        "psql",
-                        "-h", HOST,
-                        "-U", USER,
-                        "-d", DATA_PLATFORM_DB,
-                        "-f", SQL_QUALITY_CHECKS_FILE_PATH,
-                        "-v", f"batch_id={batch_id}",
-                        "-v", "ON_ERROR_STOP=1" # Pour que la commande lance une exception CalledProcessError en cas d eprobleme / erreur
-                ],
-                env=env,
-                capture_output=True,
-                text=True,
-                check=True
+    output = PsqlClient(
+         user=USER,
+         host=HOST,
+         db=DATA_PLATFORM_DB,
+         variable_assignment=f"batch_id={batch_id}",
+         env=env            
+        ).execute(
+             input=SQL_QUALITY_CHECKS_FILE_PATH,
+             is_sql_file=True
         )
-        except subprocess.CalledProcessError as e:
-            error_message = e.stderr           
-            raise RuntimeError(error_message) from e # Relancer ie propage rlerreur
-            
-        
+    logger.info(output)
         
 if __name__ ==  "__main__":
         check_quality()
