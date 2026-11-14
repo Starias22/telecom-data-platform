@@ -58,7 +58,12 @@ GRANT INSERT, SELECT, UPDATE ON TABLE pipeline_metadata.batch_logs TO data_engin
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA pipeline_metadata TO data_engineer;
 
 GRANT USAGE ON SCHEMA analytics TO data_engineer;
-GRANT SELECT, UPDATE ON ALL TABLES IN SCHEMA analytics TO data_engineer;
+GRANT SELECT ON ALL TABLES IN SCHEMA analytics TO data_engineer;
+ALTER DEFAULT PRIVILEGES
+FOR ROLE postgres
+IN SCHEMA analytics
+GRANT SELECT ON TABLES TO data_engineer;
+
 
 
 

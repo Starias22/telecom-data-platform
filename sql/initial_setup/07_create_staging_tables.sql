@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS staging.offers(
         id TEXT,
         name TEXT,
-        type TEXT,
+        category TEXT,
         price_xof INT,
         start_date TIMESTAMP,
         end_date TIMESTAMP,

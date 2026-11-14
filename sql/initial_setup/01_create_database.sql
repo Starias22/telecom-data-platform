@@ -1,0 +1,2 @@
+CREATE DATABASE ben_telecom_data_platform;
+\connect ben_telecom_data_platform;

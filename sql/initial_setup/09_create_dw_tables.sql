@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS dw.dim_offer(
         offer_config_id INT PRIMARY KEY,    
         offer_id VARCHAR(20) NOT NULL,
         offer_name VARCHAR(50) NOT NULL,
-        offer_type VARCHAR(10) NOT NULL,
         offer_category VARCHAR(10) NOT NULL,
+        offer_family VARCHAR(10) NOT NULL,
         validity_days SMALLINT,
         is_limitless BOOLEAN,
         price_xof INT CHECK(price_xof >= 0),
@@ -85,3 +85,4 @@ CREATE TABLE IF NOT EXISTS dw.fact_consumption(
         FOREIGN KEY(offer_config_id) REFERENCES dw.dim_offer(offer_config_id),
         CHECK (COALESCE(call_duration_seconds, sms_sent_count, data_used_mb) IS NOT NULL) -- Service parameters should not be all null
 );
+
