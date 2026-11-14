@@ -1,7 +1,6 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
-from airflow import DAG
 from airflow.providers.standard.operators.python import PythonOperator
 
 from config.config import SOURCE_NAMES
@@ -206,6 +205,7 @@ def build_pipeline(dag, incremental:bool=False):
     (
                 
         start_batch_task >> 
+        get_watermark_task >> 
 
         [
             extract_offers_task,
@@ -226,4 +226,6 @@ def build_pipeline(dag, incremental:bool=False):
         complete_batch_task
 
         )
+
+    return start_batch_task # This is just for inital pipeline dag to handle "already executed" simply
 
