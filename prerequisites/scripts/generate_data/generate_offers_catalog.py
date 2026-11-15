@@ -4,8 +4,8 @@ import pandas as pd
 from datetime import datetime
 
 from config.paths import OFFER_RECORDS_CSV_FILE_PATH, BILLING_RECORDS_CSV_FILE_PATH, OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH, OFFERS_CATALOG_DIR
-from config.column_names import ID_COL, OFFER_ID_COL,  BILLING_ID_COL, START_DATE_COL, END_DATE_COL, VALIDITY_DAYS_COL, TYPE_COL, VALUE_MB_COL, VALUE_XOF_COL, XOF_PER_MB_COL, XOF_PER_SEC_COL, XOF_PER_SMS_COL, IS_LIMITLESS_COL, NAME_COL, PRICE_XOF_COL, CREATED_AT_COL, UPDATED_AT_COL
-from config.categorical_constants import  MOBILE, DATA, BUNDLE
+from config.column_names import ID_COL, OFFER_ID_COL,  BILLING_ID_COL, START_DATE_COL, END_DATE_COL, VALIDITY_DAYS_COL, CATEGORY_COL, VALUE_MB_COL, VALUE_XOF_COL, XOF_PER_MB_COL, XOF_PER_SEC_COL, XOF_PER_SMS_COL, IS_LIMITLESS_COL, NAME_COL, PRICE_XOF_COL, CREATED_AT_COL, UPDATED_AT_COL
+from config.categorical_constants import  VOICE_SMS, DATA, BUNDLE
 from config.config import NULL, TELECOM_CREATION_DATE
 
 UPDATED_AT = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -14,28 +14,28 @@ UPDATED_AT = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def generate_offers_catalog():
         offer_names = ["Offre par Défaut", "Navigation Internet Option Libre"]
-        offer_types = [MOBILE, DATA]
+        offer_categories = [VOICE_SMS, DATA]
         offer_prices = [pd.NA, pd.NA]
 
 
         maxi_offer_prices = [100, 150, 200, 500, 1000, 2500, 5000]
         offer_names.extend([f"Forfait Maxi Appel {price} F" for price in maxi_offer_prices])
-        offer_types.extend([MOBILE for _ in maxi_offer_prices])
+        offer_categories.extend([VOICE_SMS for _ in maxi_offer_prices])
         offer_prices.extend(maxi_offer_prices)
 
         offer_names.extend([f"Forfait Maxi Appel + Internet {price} F" for price in maxi_offer_prices])
-        offer_types.extend([BUNDLE for _ in maxi_offer_prices])
+        offer_categories.extend([BUNDLE for _ in maxi_offer_prices])
         offer_prices.extend(maxi_offer_prices)
 
 
         volume_data_offer_prices = [100, 150, 200, 300, 500, 750, 1000, 2500, 5000]
         offer_names.extend([f"Forfait Internet Volume {price} F" for price in volume_data_offer_prices])
-        offer_types.extend([DATA for _ in volume_data_offer_prices])
+        offer_categories.extend([DATA for _ in volume_data_offer_prices])
         offer_prices.extend(volume_data_offer_prices)
 
         limitless_data_offer_prices = [15_000, 20_000, 25_000]
         offer_names.extend([f"Forfait Internet Illimité {price} F" for price in limitless_data_offer_prices])
-        offer_types.extend([DATA for _ in limitless_data_offer_prices])
+        offer_categories.extend([DATA for _ in limitless_data_offer_prices])
         offer_prices.extend(limitless_data_offer_prices)
 
         # !! Add promotional offers
@@ -43,7 +43,7 @@ def generate_offers_catalog():
 
         offers_df = pd.DataFrame({
                 NAME_COL : offer_names,
-                TYPE_COL : offer_types,
+                CATEGORY_COL : offer_categories,
                 PRICE_XOF_COL : offer_prices,
                 START_DATE_COL: TELECOM_CREATION_DATE,
                 END_DATE_COL: NULL,
@@ -51,11 +51,11 @@ def generate_offers_catalog():
                 UPDATED_AT_COL:UPDATED_AT # !!!Change later so that it will be random
                 })
 
-        offers_df[ID_COL] = offers_df[TYPE_COL] + "_" + offers_df[PRICE_XOF_COL].astype(str)
-        offers_df.loc[0, ID_COL] = "MOBILE_DEFAULT"
+        offers_df[ID_COL] = offers_df[CATEGORY_COL] + "_" + offers_df[PRICE_XOF_COL].astype(str)
+        offers_df.loc[0, ID_COL] = "VOICE_SMS_DEFAULT"
         offers_df.loc[1, ID_COL] = "DATA_PAYGO"
 
-        OFFER_COLUMNS = [NAME_COL, TYPE_COL, PRICE_XOF_COL, START_DATE_COL, END_DATE_COL]
+        OFFER_COLUMNS = [NAME_COL, CATEGORY_COL, PRICE_XOF_COL, START_DATE_COL, END_DATE_COL]
         offers_df = offers_df[[ID_COL] + OFFER_COLUMNS + [CREATED_AT_COL, UPDATED_AT_COL]]
 
         offers_df.loc[25, ID_COL] = "DATA_LIMITLESS_15000"
@@ -109,10 +109,10 @@ def generate_offers_catalog():
         array = np.array(
                         [
                                 # Offre par Défaut
-                                ["MOBILE_DEFAULT", NULL, NULL, NULL, 1, NULL, TELECOM_CREATION_DATE, "2021-12-31"],
-                                ["MOBILE_DEFAULT", NULL, NULL, NULL, 5, NULL, "2022-01-01", "2023-12-31"],
-                                ["MOBILE_DEFAULT", NULL, NULL, NULL, 9, NULL, "2024-01-01", "2025-12-31"],
-                                ["MOBILE_DEFAULT", NULL, NULL, NULL, 12, NULL, "2026-01-01", NULL],
+                                ["VOICE_SMS_DEFAULT", NULL, NULL, NULL, 1, NULL, TELECOM_CREATION_DATE, "2021-12-31"],
+                                ["VOICE_SMS_DEFAULT", NULL, NULL, NULL, 5, NULL, "2022-01-01", "2023-12-31"],
+                                ["VOICE_SMS_DEFAULT", NULL, NULL, NULL, 9, NULL, "2024-01-01", "2025-12-31"],
+                                ["VOICE_SMS_DEFAULT", NULL, NULL, NULL, 12, NULL, "2026-01-01", NULL],
 
                                 # Navigation en Option libre
                                 ["DATA_PAYGO", NULL, NULL, NULL, 2, NULL, TELECOM_CREATION_DATE, "2021-12-31"],
@@ -122,13 +122,13 @@ def generate_offers_catalog():
                                 # Offres de forfaits 
                                 # 2020-2021
                                 # Appel
-                                ["MOBILE_100", 166, NULL, 1, 3 , NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 100 F
-                                ["MOBILE_150", 250, NULL, 1, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 150 F
-                                ["MOBILE_200", 333, NULL, 1, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 200 F
-                                ["MOBILE_500", 833, NULL, 2, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 500 F
-                                ["MOBILE_1000", 1666, NULL, 7, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"],# 1000 F
-                                ["MOBILE_2500", 4166, NULL, 15, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 2500 F
-                                ["MOBILE_5000", 8333, NULL, 30, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 5000 F
+                                ["VOICE_SMS_100", 166, NULL, 1, 3 , NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 100 F
+                                ["VOICE_SMS_150", 250, NULL, 1, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 150 F
+                                ["VOICE_SMS_200", 333, NULL, 1, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 200 F
+                                ["VOICE_SMS_500", 833, NULL, 2, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 500 F
+                                ["VOICE_SMS_1000", 1666, NULL, 7, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"],# 1000 F
+                                ["VOICE_SMS_2500", 4166, NULL, 15, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 2500 F
+                                ["VOICE_SMS_5000", 8333, NULL, 30, 3, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 5000 F
                                 # Appel + Internet
                                 ["BUNDLE_100", 166, NULL, 1, 4 , NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 100 F
                                 ["BUNDLE_150", 250, NULL, 1, 4, NULL, TELECOM_CREATION_DATE, "2021-12-31"], # 150 F
@@ -154,13 +154,13 @@ def generate_offers_catalog():
 
                                 # 2022-2023
                                 # Appel
-                                ["MOBILE_100", 166, NULL, 1, 7 , NULL, "2022-01-01", "2023-12-31"], # 100 F
-                                ["MOBILE_150", 250, NULL, 1, 7, NULL, "2022-01-01", "2023-12-31"], # 150 F
-                                ["MOBILE_200", 333, NULL, 1, 7, NULL, "2022-01-01", "2023-12-31"], # 200 F
-                                ["MOBILE_500", 833, NULL, 2, 7, NULL, "2022-01-01", "2023-12-31"], # 500 F
-                                ["MOBILE_1000", 1666, NULL, 7, 7, NULL, "2022-01-01", "2023-12-31"],# 1000 F
-                                ["MOBILE_2500", 4166, NULL, 15, 7, NULL, "2022-01-01", "2023-12-31"], # 2500 F
-                                ["MOBILE_5000", 8333, NULL, 30, 7, NULL, "2022-01-01", "2023-12-31"], # 5000 F
+                                ["VOICE_SMS_100", 166, NULL, 1, 7 , NULL, "2022-01-01", "2023-12-31"], # 100 F
+                                ["VOICE_SMS_150", 250, NULL, 1, 7, NULL, "2022-01-01", "2023-12-31"], # 150 F
+                                ["VOICE_SMS_200", 333, NULL, 1, 7, NULL, "2022-01-01", "2023-12-31"], # 200 F
+                                ["VOICE_SMS_500", 833, NULL, 2, 7, NULL, "2022-01-01", "2023-12-31"], # 500 F
+                                ["VOICE_SMS_1000", 1666, NULL, 7, 7, NULL, "2022-01-01", "2023-12-31"],# 1000 F
+                                ["VOICE_SMS_2500", 4166, NULL, 15, 7, NULL, "2022-01-01", "2023-12-31"], # 2500 F
+                                ["VOICE_SMS_5000", 8333, NULL, 30, 7, NULL, "2022-01-01", "2023-12-31"], # 5000 F
                                 # Appel + Internet
                                 ["BUNDLE_100", 166, NULL, 1, 8 , NULL, "2022-01-01", "2023-12-31"], # 100 F
                                 ["BUNDLE_150", 250, NULL, 1, 8, NULL, "2022-01-01", "2023-12-31"], # 150 F
@@ -187,13 +187,13 @@ def generate_offers_catalog():
 
                                 # 2024-2025
                                 # Appel
-                                ["MOBILE_100", 166, NULL, 1, 10, NULL, "2024-01-01", "2025-12-31"], # 100 F
-                                ["MOBILE_150", 250, NULL, 1, 10, NULL, "2024-01-01", "2025-12-31"], # 150 F
-                                ["MOBILE_200", 333, NULL, 1, 10, NULL, "2024-01-01", "2025-12-31"], # 200 F
-                                ["MOBILE_500", 833, NULL, 2, 10, NULL, "2024-01-01", "2025-12-31"], # 500 F
-                                ["MOBILE_1000", 1666, NULL, 7, 10, NULL, "2024-01-01", "2025-12-31"],# 1000 F
-                                ["MOBILE_2500", 4166, NULL, 15, 10,  NULL, "2024-01-01", "2025-12-31"], # 2500 F
-                                ["MOBILE_5000", 8333, NULL, 30, 10, NULL, "2024-01-01", "2025-12-31"], # 5000 F
+                                ["VOICE_SMS_100", 166, NULL, 1, 10, NULL, "2024-01-01", "2025-12-31"], # 100 F
+                                ["VOICE_SMS_150", 250, NULL, 1, 10, NULL, "2024-01-01", "2025-12-31"], # 150 F
+                                ["VOICE_SMS_200", 333, NULL, 1, 10, NULL, "2024-01-01", "2025-12-31"], # 200 F
+                                ["VOICE_SMS_500", 833, NULL, 2, 10, NULL, "2024-01-01", "2025-12-31"], # 500 F
+                                ["VOICE_SMS_1000", 1666, NULL, 7, 10, NULL, "2024-01-01", "2025-12-31"],# 1000 F
+                                ["VOICE_SMS_2500", 4166, NULL, 15, 10,  NULL, "2024-01-01", "2025-12-31"], # 2500 F
+                                ["VOICE_SMS_5000", 8333, NULL, 30, 10, NULL, "2024-01-01", "2025-12-31"], # 5000 F
                                 # Appel + Internet
                                 ["BUNDLE_100", 166, NULL, 1, 11, NULL, "2024-01-01", "2025-12-31"], # 100 F
                                 ["BUNDLE_150", 250, NULL, 1, 11, NULL, "2024-01-01", "2025-12-31"], # 150 F
@@ -219,13 +219,13 @@ def generate_offers_catalog():
 
                                 # 2026
                                 # Appel
-                                ["MOBILE_100", 166, NULL, 1, 14, NULL, "2026-01-01", NULL], # 100 F
-                                ["MOBILE_150", 250, NULL, 1, 14, NULL, "2026-01-01", NULL], # 150 F
-                                ["MOBILE_200", 333, NULL, 1, 14, NULL, "2026-01-01", NULL], # 200 F
-                                ["MOBILE_500", 833, NULL, 2, 14, NULL, "2026-01-01", NULL], # 500 F
-                                ["MOBILE_1000", 1666, NULL, 7, 14, NULL, "2026-01-01", NULL],# 1000 F
-                                ["MOBILE_2500", 4166, NULL, 15, 14, NULL, "2026-01-01", NULL], # 2500 F
-                                ["MOBILE_5000", 8333, NULL, 30, 14, NULL, "2026-01-01", NULL], # 5000 F
+                                ["VOICE_SMS_100", 166, NULL, 1, 14, NULL, "2026-01-01", NULL], # 100 F
+                                ["VOICE_SMS_150", 250, NULL, 1, 14, NULL, "2026-01-01", NULL], # 150 F
+                                ["VOICE_SMS_200", 333, NULL, 1, 14, NULL, "2026-01-01", NULL], # 200 F
+                                ["VOICE_SMS_500", 833, NULL, 2, 14, NULL, "2026-01-01", NULL], # 500 F
+                                ["VOICE_SMS_1000", 1666, NULL, 7, 14, NULL, "2026-01-01", NULL],# 1000 F
+                                ["VOICE_SMS_2500", 4166, NULL, 15, 14, NULL, "2026-01-01", NULL], # 2500 F
+                                ["VOICE_SMS_5000", 8333, NULL, 30, 14, NULL, "2026-01-01", NULL], # 5000 F
                                 # Appel + Internet
                                 ["BUNDLE_100", 166, NULL, 1, 15, NULL, "2026-01-01", NULL], # 100 F
                                 ["BUNDLE_150", 250, NULL, 1, 15, NULL, "2026-01-01", NULL], # 150 F
@@ -266,7 +266,7 @@ def generate_offers_catalog():
 
         print(offer_configs_df)
         # Ne pas considerer offre par defaut (credit/airtime) et option libre pour le moment (!!!!Supprimer ce filtre plus tard pour les considerer plus tard)
-        offers_df = offers_df[~offers_df[ID_COL].isin(["MOBILE_DEFAULT","DATA_PAYGO"])]
+        offers_df = offers_df[~offers_df[ID_COL].isin(["VOICE_SMS_DEFAULT","DATA_PAYGO"])]
         offer_configs_df = offer_configs_df[~offer_configs_df[VALIDITY_DAYS_COL].isna()]
         print(offer_configs_df)
 

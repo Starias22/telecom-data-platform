@@ -3,8 +3,8 @@ import numpy as np
 import json
 
 from config.paths import SUBSCRIPTIONS_RECORDS_FILE, TELECOM_SERVICES_USAGE_FILE
-from config.column_names import ID_COL, CUSTOMER_ID_COL, PHONE_NUMBER_COL, VALIDITY_DAYS_COL, PURCHASED_AT_COL, TYPE_COL, DATA_MB_COL, DATA_USAGE_COL, CALL_SECONDS_COL, CALLS_USAGE_COL, SMS_COUNT_COL, SMS_USAGE_COL, XOF_PER_SMS_COL, VALUE_MB_COL, VALUE_XOF_COL, SERVICE_TYPE_COL, XOF_PER_MB_COL, XOF_PER_SEC_COL, TIMESTAMP_MILLISECONDS_COL, SUBSCRIPTION_ID_COL, PURCHASE_ID_COL, TERMINATION_DATE_COL
-from config.categorical_constants import BUNDLE, MOBILE, BUNDLE, DATA
+from config.column_names import ID_COL, CUSTOMER_ID_COL, PHONE_NUMBER_COL, VALIDITY_DAYS_COL, PURCHASED_AT_COL, CATEGORY_COL, DATA_MB_COL, DATA_USAGE_COL, CALL_SECONDS_COL, CALLS_USAGE_COL, SMS_COUNT_COL, SMS_USAGE_COL, XOF_PER_SMS_COL, VALUE_MB_COL, VALUE_XOF_COL, SERVICE_TYPE_COL, XOF_PER_MB_COL, XOF_PER_SEC_COL, TIMESTAMP_MILLISECONDS_COL, SUBSCRIPTION_ID_COL, PURCHASE_ID_COL, TERMINATION_DATE_COL
+from config.categorical_constants import BUNDLE, VOICE_SMS, BUNDLE, DATA
 from config.utils import get_purchase_details
 from config.config import SEED, SMS, CALL
 import re
@@ -23,7 +23,7 @@ def generate_service_usage_data():
 
         print(purchases_df[VALIDITY_DAYS_COL].dtype)
 
-        bundle_mask = purchases_df[TYPE_COL] == BUNDLE
+        bundle_mask = purchases_df[CATEGORY_COL] == BUNDLE
         print(bundle_mask.sum())
         purchases_df.loc[bundle_mask, DATA_USAGE_COL] = rng.integers(0, 100 + 1, size=bundle_mask.sum())
         purchases_df.loc[bundle_mask, CALLS_USAGE_COL] = rng.integers(0, 100 - purchases_df.loc[bundle_mask, DATA_USAGE_COL] + 1)
@@ -42,7 +42,7 @@ def generate_service_usage_data():
         print(purchases_df[bundle_mask])
 
 
-        mobile_mask = purchases_df[TYPE_COL] == MOBILE
+        mobile_mask = purchases_df[CATEGORY_COL] == VOICE_SMS
         print(mobile_mask.sum())
         purchases_df.loc[mobile_mask, CALLS_USAGE_COL] = rng.integers(0, 100 + 1, size=mobile_mask.sum())
         # purchases_df.loc[mobile_mask, SMS_USAGE_PERCENT_COL] = 100  - purchases_df.loc[mobile_mask, CALLS_USAGE_PERCENT_COL]
@@ -58,7 +58,7 @@ def generate_service_usage_data():
 
         print(purchases_df[maxi_mask])
 
-        data_mask = purchases_df[TYPE_COL] == DATA
+        data_mask = purchases_df[CATEGORY_COL] == DATA
 
 
         purchases_df.loc[data_mask, DATA_USAGE_COL] = rng.integers(0, purchases_df.loc[data_mask, VALUE_MB_COL])
@@ -86,9 +86,9 @@ def generate_service_usage_data():
 
         # Mettre a jour les masques (puisque les achats qui n'ont pas été utilisés du tout ont été supprimés)
 
-        mobile_mask = purchases_df[TYPE_COL] == MOBILE
-        data_mask = purchases_df[TYPE_COL] == DATA
-        bundle_mask = purchases_df[TYPE_COL] == BUNDLE
+        mobile_mask = purchases_df[CATEGORY_COL] == VOICE_SMS
+        data_mask = purchases_df[CATEGORY_COL] == DATA
+        bundle_mask = purchases_df[CATEGORY_COL] == BUNDLE
 
         maxi_mask = bundle_mask | mobile_mask
 
@@ -237,6 +237,7 @@ def generate_service_usage_data():
         usage_period_seconds = usage_period_days.dt.total_seconds().astype(int)
         print(usage_period_seconds)
         print(usage_period_seconds[usage_period_seconds <= 0])
+    
        
 
         usage_offset_seconds = rng.integers(0, usage_period_seconds + 1)
@@ -249,6 +250,12 @@ def generate_service_usage_data():
         print(usage_df.columns)
 
         print(usage_df)
+
+        print(usage_df[TIMESTAMP_MILLISECONDS_COL])
+        print(usage_df[ usage_df[PURCHASE_ID_COL] == 13])
+
+
+        # exit()
 
         
 
