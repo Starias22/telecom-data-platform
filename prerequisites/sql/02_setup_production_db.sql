@@ -15,7 +15,7 @@ CREATE SCHEMA subscriptions;
 CREATE TABLE offers_catalog.offers(
         id VARCHAR(20) PRIMARY KEY,
         name VARCHAR(50) UNIQUE NOT NULL,
-        type VARCHAR(10) NOT NULL CHECK (type IN('DATA', 'MOBILE', 'BUNDLE')),
+        category VARCHAR(10) NOT NULL CHECK (category IN('DATA', 'VOICE_SMS', 'BUNDLE')),
         price_xof INT, -- Nullable
         start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         end_date TIMESTAMP,
