@@ -4,6 +4,7 @@ import pandas as pd
 from pathlib import Path
 from datetime import date
 import shutil
+from glob import glob
 
 from config.paths import SUBSCRIPTIONS_RECORDS_FILE, RECHARGE_TRANSACTIONS_DIR, OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH
 from config.column_names import TERMINATION_DATE_COL, REGISTRATION_DATE_COL, ID_COL, START_DATE_COL, END_DATE_COL, SUBSCRIPTION_ID_COL, PURCHASED_AT_COL, OFFER_CONFIG_ID_COL, PAYMENT_METHOD_COL, PURCHASE_CHANNEL_COL
@@ -11,124 +12,125 @@ from config.config import SEED, PAYMENT_METHOD_PROBABILITIES, PURCHASE_CHANNEL_P
 
 # !!! Update it so rhat it will genarete daily chunks of parquet file 
 def generate_purchases():
-        dir = Path(RECHARGE_TRANSACTIONS_DIR)
-        rng = np.random.default_rng(SEED)
-        TODAY = date.today().strftime("%Y-%m-%d")
-        DAILY_PURCHASE_RATE = 0.15
+    dir = Path(RECHARGE_TRANSACTIONS_DIR)
+    rng = np.random.default_rng(SEED)
+    TODAY = date.today().strftime("%Y-%m-%d")
+    DAILY_PURCHASE_RATE = 0.15
 
-        offer_configs_df = pd.read_csv(OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH, parse_dates=[START_DATE_COL, END_DATE_COL])
+    offer_configs_df = pd.read_csv(OFFER_CONFIGURATION_RECORDS_CSV_FILE_PATH, parse_dates=[START_DATE_COL, END_DATE_COL])
 
 
-        subscriptions_df = pd.read_csv(SUBSCRIPTIONS_RECORDS_FILE, parse_dates=[REGISTRATION_DATE_COL, TERMINATION_DATE_COL])
+    subscriptions_df = pd.read_csv(SUBSCRIPTIONS_RECORDS_FILE, parse_dates=[REGISTRATION_DATE_COL, TERMINATION_DATE_COL])
         
-        print(subscriptions_df[REGISTRATION_DATE_COL].dtype)
-        print(subscriptions_df[TERMINATION_DATE_COL].dtype)
+    print(subscriptions_df[REGISTRATION_DATE_COL].dtype)
+    print(subscriptions_df[TERMINATION_DATE_COL].dtype)
         
-        if dir.exists():
-                print("Yes exists")
-                shutil.rmtree(dir)
-                # return
-
-        dir.mkdir()
-        print(subscriptions_df)
-
-
-        # Determine global date range
-        first_operational_date = subscriptions_df[REGISTRATION_DATE_COL].min().date()
-        print(first_operational_date)
-        print(type(first_operational_date))
-        # exit()
-
-        last_operational_date = pd.Timestamp(TODAY)
+    if dir.exists():
+        print("Yes exists")
+        shutil.rmtree(dir)
+    
+    dir.mkdir()
+    print(subscriptions_df)
 
 
-        print(first_operational_date)
-        print(last_operational_date)
-        print(type(first_operational_date))
-        print(type(last_operational_date))
+    # Determine global date range
+    first_operational_date = subscriptions_df[REGISTRATION_DATE_COL].min().date()
+    print(first_operational_date)
+   
+    last_operational_date = pd.Timestamp(TODAY)
 
-        operational_dates = pd.date_range(
+
+    print(first_operational_date)
+    print(last_operational_date)
+    print(type(first_operational_date))
+    print(type(last_operational_date))
+
+    operational_dates = pd.date_range(
                 start=first_operational_date,
                 end=last_operational_date,
                 freq="D"
         )
-        print(operational_dates)
+    print(operational_dates)
 
 
-        print(f"Generating purchases from {first_operational_date} to {last_operational_date} ({len(operational_dates)} days)")
-        # os.makedirs(RECHARGE_TRANSACTIONS_FOLDER, exist_ok=True)
+    print(f"Generating purchases from {first_operational_date} to {last_operational_date} ({len(operational_dates)} days)")
+    # os.makedirs(RECHARGE_TRANSACTIONS_FOLDER, exist_ok=True)
 
-        cpt = 1
-        for current_date in tqdm(operational_dates):
-                print(current_date)
-                                
-                active_subscriptions_mask = (
+    cpt = 1
+    for current_date in tqdm(operational_dates):
+        print(current_date)
+        active_subscriptions_mask = (
                 ( subscriptions_df[REGISTRATION_DATE_COL] <= current_date) & 
                 (subscriptions_df[TERMINATION_DATE_COL].isna() | (subscriptions_df[TERMINATION_DATE_COL] >= current_date)
                                                                                 )
                 )
                 
-                active_subscriptions_df = subscriptions_df.loc[active_subscriptions_mask]
+        active_subscriptions_df = subscriptions_df.loc[active_subscriptions_mask]
 
-                print(active_subscriptions_mask.sum())
+        print(active_subscriptions_mask.sum())
                 
+        num_active = len(active_subscriptions_df)
+        if num_active == 0:
+            print(f"No active subscription on {current_date}")
+            continue        
                 
-                num_active = len(active_subscriptions_df)
-                if num_active == 0:
-                        print("No active subscription")
-                        continue        
+        # Generate the number of purchases for each subscription: they are in {0, 1, 2, ... N=? purchases}
+        purchases_counts = rng.poisson(DAILY_PURCHASE_RATE, size = num_active)
                 
-                # Generate the number of purchases for each subscription: they are in {0, 1, 2, ... N=? purchases}
-                purchases_counts = rng.poisson(DAILY_PURCHASE_RATE, size = num_active)
-                
-                total_purchases = purchases_counts.sum()
-                if total_purchases == 0:
-                        print("No purchase generated")
-                        continue
+        total_purchases = purchases_counts.sum()
+        if total_purchases == 0:
+            print(f"No purchase generated on {current_date}")
+            continue
 
         
-                purchases_df = active_subscriptions_df.loc[active_subscriptions_df.index.repeat(purchases_counts)]
+        purchases_df = active_subscriptions_df.loc[active_subscriptions_df.index.repeat(purchases_counts)]
+        purchases_df.rename(columns={ID_COL:SUBSCRIPTION_ID_COL}, inplace = True)
+        print(purchases_df)
+        print(len(purchases_df))
                 
-                purchases_df.rename(columns={ID_COL:SUBSCRIPTION_ID_COL}, inplace = True)
-                print(purchases_df)
-                print(len(purchases_df))
-                
-                seconds_before_subscription_termination_or_end_of_day = purchases_df[TERMINATION_DATE_COL].dt.second.astype("Int64").fillna(24 * 60 * 60)
-                print(len(seconds_before_subscription_termination_or_end_of_day))
-                print(seconds_before_subscription_termination_or_end_of_day)
+        seconds_before_subscription_termination_or_end_of_day = purchases_df[TERMINATION_DATE_COL].dt.second.astype("Int64").fillna(24 * 60 * 60)
+        print(len(seconds_before_subscription_termination_or_end_of_day))
+        print(seconds_before_subscription_termination_or_end_of_day)
                
-                print(seconds_before_subscription_termination_or_end_of_day)
+        print(seconds_before_subscription_termination_or_end_of_day)
+        print(seconds_before_subscription_termination_or_end_of_day[seconds_before_subscription_termination_or_end_of_day <=0])
                                
                 
-                # Generate a random time (in seconds) for each purchase of this day
-                random_num_seconds = rng.integers(0,
+        # Generate a random time (in seconds) for each purchase of this day
+        random_num_seconds = rng.integers(0,
                                         seconds_before_subscription_termination_or_end_of_day,
                                         size = len(purchases_df)
                                         
                 )
-                purchases_df[PURCHASED_AT_COL] = (
+        purchases_df[PURCHASED_AT_COL] = (
                         current_date + pd.to_timedelta(random_num_seconds, unit="seconds")
-                )          
+                ) 
+
+                      
                 
-                purchases_df[PAYMENT_METHOD_COL] = rng.choice(
+        purchases_df[PAYMENT_METHOD_COL] = rng.choice(
                         list(PAYMENT_METHOD_PROBABILITIES.keys()), size=len(purchases_df), p=list(PAYMENT_METHOD_PROBABILITIES.values())
                         )
                 
-                purchases_df[PURCHASE_CHANNEL_COL] = rng.choice(
+        purchases_df[PURCHASE_CHANNEL_COL] = rng.choice(
                         list(PURCHASE_CHANNEL_PROBABILITIES.keys()),
                         size=len(purchases_df),
                         p=list(PURCHASE_CHANNEL_PROBABILITIES.values())
                 )
-                current_offer_configs_df = offer_configs_df[(offer_configs_df[START_DATE_COL] <=current_date) & (offer_configs_df[END_DATE_COL] >= current_date)]
-                purchases_df[OFFER_CONFIG_ID_COL] = rng.choice(current_offer_configs_df[ID_COL].unique(), size=len(purchases_df))
-                # Sort by time
-                purchases_df.sort_values(PURCHASED_AT_COL, inplace=True)
+        current_offer_configs_df = offer_configs_df[(offer_configs_df[START_DATE_COL] <=current_date) & 
+                                                    (offer_configs_df[END_DATE_COL] > current_date)] # strictlitement sup pour eviter PURCHASED_NON_EXISTING_ANYMORE_OFFER_CONFIG
+        
+        if len(current_offer_configs_df) == 0:
+             print(f"No offer config is current to be bougth on {current_date}")
+             continue
+        purchases_df[OFFER_CONFIG_ID_COL] = rng.choice(current_offer_configs_df[ID_COL].unique(), size=len(purchases_df))
+        # Sort by time
+        purchases_df.sort_values(PURCHASED_AT_COL, inplace=True)
                 
-                purchases_df[ID_COL] = np.arange(cpt, cpt + len(purchases_df))
-
+        purchases_df[ID_COL] = np.arange(cpt, cpt + len(purchases_df))
                         
-                # Keep only needed columns
-                purchases_df = purchases_df[
+        # Keep only needed columns
+        purchases_df = purchases_df[
                         [       ID_COL,
                                 SUBSCRIPTION_ID_COL,
                                 OFFER_CONFIG_ID_COL,
@@ -138,19 +140,37 @@ def generate_purchases():
                         ]
                 ]
 
-                print(purchases_df)
-                print("##########")
+        print(purchases_df)
                 
-                file = dir / f"{current_date.strftime('%Y%m%d')}.parquet"
-                purchases_df.to_parquet(file, index=False)
-                # purchases_df.to_csv(file, index=False)
+        file = dir / f"{current_date.strftime('%Y%m%d')}.parquet"
+        purchases_df.to_parquet(file, index=False)
+        # purchases_df.to_csv(file, index=False)
                 
-                cpt += len(purchases_df)
+        cpt += len(purchases_df)
 
-                if len(purchases_df) >= 1_00:
-                        print(len(purchases_df))
-                        # print(purchases_df[[ID_COL, SUBSCRIPTION_ID_COL, PURCHASED_AT_COL, REGISTRATION_DATE_COL]])
-                        return
+        # if len(purchases_df) >= 5_000:
+        if len(purchases_df) >= 10: # For test
+        # if len(purchases_df) >= 1_000: # Ceci n'est pas la taille totale des achats mais juste la taillle pour un batch / journee donnee
+            print(len(purchases_df))
+            # print(purchases_df[[ID_COL, SUBSCRIPTION_ID_COL, PURCHASED_AT_COL, REGISTRATION_DATE_COL]])
+            break
+        # Bilan
+
+
+                
+    purchase_files = glob(f"{dir}/*")
+    purchases_df = pd.concat([pd.read_parquet(file) for file in purchase_files], ignore_index=True)
+  
+    print(purchases_df)
+
+    purchases_df.sort_values(by=ID_COL, inplace=True)
+    print(purchases_df)
+
+
+    print(f"{len(purchases_df)} purchases generated successfully")
+
+                
 
 if __name__ == "__main__":
         generate_purchases()
+        
