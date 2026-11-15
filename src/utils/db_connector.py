@@ -4,19 +4,18 @@ from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-def get_connection(dbname=DATA_PLATFORM_DB):
-        connection = psycopg.connect(
-                host=HOST,
-                port=5432,
-                dbname=dbname,
-                user=USER,
-                password=PASSDWORD
-        )
-        logger.info(f"Connected to database '{dbname}' as user '{USER}'")
+def get_connection():
+        connection = psycopg.connect() # Connection infos are automatically read from .env
+        user = connection.info.user
+        db = connection.info.dbname
+        port = connection.info.port
+        host = connection.info.host
+        
+        logger.info(f"Connected to database '{db}' as user '{user}' at '{host}' on port {port}")
         return connection
 
 if __name__ == "__main__":
         connection = get_connection()
-        # print(connection)
+        
 
 
