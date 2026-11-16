@@ -174,7 +174,7 @@ WHERE NOT EXISTS (
 -- Fact purchase
 \echo '------------------------------------------------------------'
 \echo 'Populating fact_purchase'
-INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_config_id, revenue)
+INSERT INTO dw.fact_purchase(purchase_id, purchase_date_key, customer_key, offer_config_id, revenue)
 WITH x AS (SELECT
     p.id AS purchase_id,
     p.purchased_at,
@@ -191,14 +191,14 @@ JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id -- JOIN avec dim cu
                             AND dc.valid_to > p.purchased_at
 JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id -- Seulemt les achats de config ud existant dans dimoffer
 )
-SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, revenue FROM x;
+SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS consumption_date_key, customer_key, offer_config_id, revenue FROM x;
 
 
 -- Fact consumption
 -- SELECT * FROM current_batch_services_usage;
 \echo '------------------------------------------------------------'
 \echo 'Populating fact_consumption'
-INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
+INSERT INTO dw.fact_consumption(purchase_id, consumption_date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS (
 -- SELECT * FROM staging.services_usage AS su
 SELECT * FROM current_batch_services_usage AS su
@@ -238,7 +238,7 @@ JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id -- Pour avoir la ve
 ),
 service_consumption AS(
 SELECT purchase_id,
-TO_CHAR(usage_date, 'YYYYMMDD')::INT AS date_key,
+TO_CHAR(usage_date, 'YYYYMMDD')::INT AS consumption_date_key,
 customer_key,
 offer_config_id,
 COALESCE(call_duration_seconds, 0) AS call_duration_seconds, -- Use COALESCE to handle cases there is no use of a specific service for the aggregation (which result in NULL value)
@@ -247,7 +247,7 @@ COALESCE(data_used_mb, 0.0) AS data_used_mb
 FROM service_usage_aggregated_enriched
 )
 SELECT * FROM service_consumption
-ON CONFLICT (purchase_id, date_key)
+ON CONFLICT (purchase_id, consumption_date_key)
 DO UPDATE SET call_duration_seconds = dw.fact_consumption.call_duration_seconds + EXCLUDED.call_duration_seconds,
               sms_sent_count = dw.fact_consumption.sms_sent_count + EXCLUDED.sms_sent_count,
               data_used_mb = dw.fact_consumption.data_used_mb + EXCLUDED.data_used_mb;

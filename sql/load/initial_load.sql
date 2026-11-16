@@ -81,7 +81,7 @@ SELECT COUNT(*) FROM staging.subscriptions;
 -- Fact purchase
 \echo '------------------------------------------------------------'
 \echo 'Populating fact_purchase'
-INSERT INTO dw.fact_purchase(purchase_id, date_key, customer_key, offer_config_id, revenue)
+INSERT INTO dw.fact_purchase(purchase_id, purchase_date_key, customer_key, offer_config_id, revenue)
 WITH purchase_details AS(
 SELECT p.id AS purchase_id, purchased_at::DATE AS purchase_date, customer_key, s.customer_id, dc.valid_from, dc.valid_to, p.offer_config_id, price_xof AS revenue
 FROM staging.purchases AS p
@@ -89,7 +89,7 @@ JOIN staging.subscriptions AS s ON s.id = p.subscription_id
 JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id
 JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id -- !!!Pourquoi des LEFT JOIN et pas simplement des INNER JOIN? (PLusieurs lignes restent inseres lorque jutilise INNER JOIN)
 )
-SELECT purchase_id, TO_CHAR(purchase_date, 'YYYYMMDD')::INT AS date_key, customer_key, offer_config_id, revenue FROM purchase_details;
+SELECT purchase_id, TO_CHAR(purchase_date, 'YYYYMMDD')::INT AS purchase_date_key, customer_key, offer_config_id, revenue FROM purchase_details;
 
 
 SELECT COUNT(*) FROM dw.fact_purchase;
@@ -100,31 +100,31 @@ SELECT COUNT(*) FROM staging.purchases;
 -- Fact consumption
 \echo '------------------------------------------------------------'
 \echo 'Populating fact_consumption'
-INSERT INTO dw.fact_consumption(purchase_id, date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
+INSERT INTO dw.fact_consumption(purchase_id, consumption_date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS(
     SELECT * FROM staging.services_usage AS su WHERE NOT EXISTS (
         SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id :: TEXT
     )   
 ),
 x AS (
-SELECT purchase_id, subscription_id, TO_CHAR(timestamp::DATE, 'YYYYMMDD')::INT AS date_key, call_seconds, sms_count, data_mb
+SELECT purchase_id, subscription_id, TO_CHAR(timestamp::DATE, 'YYYYMMDD')::INT AS consumption_date_key, call_seconds, sms_count, data_mb
 FROM service_usage_deduplicated
 ),
 customer_purchase_consumption_daily_events_aggregated AS (
-SELECT purchase_id, subscription_id,date_key,
+SELECT purchase_id, subscription_id, consumption_date_key,
 SUM(call_seconds) OVER(w) AS call_duration_seconds,
 SUM(sms_count) OVER(w) AS sms_sent_count,
 SUM(data_mb) OVER(w) AS data_used_mb,
 ROW_NUMBER() OVER (w) AS rn
 FROM x
-WINDOW w AS (PARTITION BY purchase_id, date_key )
+WINDOW w AS (PARTITION BY purchase_id, consumption_date_key )
 ),
 y AS(
-SELECT purchase_id, subscription_id, date_key, call_duration_seconds, sms_sent_count, data_used_mb
+SELECT purchase_id, subscription_id, consumption_date_key, call_duration_seconds, sms_sent_count, data_used_mb
 FROM customer_purchase_consumption_daily_events_aggregated WHERE rn = 1
 ),
 consumption_details AS (
-SELECT purchase_id, date_key, customer_key, offer_config_id,
+SELECT purchase_id, consumption_date_key, customer_key, offer_config_id,
 COALESCE(call_duration_seconds, 0),
 COALESCE(sms_sent_count, 0),
 COALESCE(data_used_mb, 0.0)

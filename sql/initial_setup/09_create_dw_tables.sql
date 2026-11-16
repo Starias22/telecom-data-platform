@@ -61,11 +61,11 @@ CREATE TABLE IF NOT EXISTS dw.dim_subscription(
 
 CREATE TABLE IF NOT EXISTS dw.fact_purchase(
         purchase_id INT PRIMARY KEY, -- !!! Faut-il faire faire FK(purchase_id)  references staging.purchases(id)?
-        date_key INT NOT NULL,
+        purchase_date_key INT NOT NULL,
         customer_key INT NOT NULL,
         offer_config_id INT NOT NULL,
         revenue INT, -- !!! Comment gerer les revenus des offres comme offre par defaut et Navigation en option libre
-        FOREIGN KEY(date_key) REFERENCES dw.dim_date(date_key),
+        FOREIGN KEY(purchase_date_key) REFERENCES dw.dim_date(date_key),
         FOREIGN KEY(customer_key) REFERENCES dw.dim_customer(customer_key),
         FOREIGN KEY(offer_config_id) REFERENCES dw.dim_offer(offer_config_id)
 );
@@ -73,14 +73,14 @@ CREATE TABLE IF NOT EXISTS dw.fact_purchase(
 CREATE TABLE IF NOT EXISTS dw.fact_consumption(
         consumption_key SERIAL PRIMARY KEY,
         purchase_id INT NOT NULL,
-        date_key INT NOT NULL,
+        consumption_date_key INT NOT NULL,
         customer_key INT NOT NULL,
         offer_config_id INT NOT NULL,
         call_duration_seconds INT NOT NULL,
         sms_sent_count INT NOT NULL,
         data_used_mb NUMERIC NOT NULL,
-        UNIQUE(purchase_id, date_key),
-        FOREIGN KEY(date_key) REFERENCES dw.dim_date(date_key),
+        UNIQUE(purchase_id, consumption_date_key),
+        FOREIGN KEY(consumption_date_key) REFERENCES dw.dim_date(date_key),
         FOREIGN KEY(customer_key) REFERENCES dw.dim_customer(customer_key),
         FOREIGN KEY(offer_config_id) REFERENCES dw.dim_offer(offer_config_id),
         CHECK (COALESCE(call_duration_seconds, sms_sent_count, data_used_mb) IS NOT NULL) -- Service parameters should not be all null
