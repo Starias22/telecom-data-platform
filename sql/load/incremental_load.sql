@@ -198,7 +198,7 @@ SELECT purchase_id, TO_CHAR(purchased_at, 'YYYYMMDD')::INT AS consumption_date_k
 -- SELECT * FROM current_batch_services_usage;
 \echo '------------------------------------------------------------'
 \echo 'Populating fact_consumption'
-INSERT INTO dw.fact_consumption(purchase_id, consumption_date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
+INSERT INTO dw.fact_consumption(purchase_id, consumption_date_key, customer_key, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS (
 -- SELECT * FROM staging.services_usage AS su
 SELECT * FROM current_batch_services_usage AS su
@@ -240,7 +240,7 @@ service_consumption AS(
 SELECT purchase_id,
 TO_CHAR(usage_date, 'YYYYMMDD')::INT AS consumption_date_key,
 customer_key,
-offer_config_id,
+-- offer_config_id,
 COALESCE(call_duration_seconds, 0) AS call_duration_seconds, -- Use COALESCE to handle cases there is no use of a specific service for the aggregation (which result in NULL value)
 COALESCE(sms_sent_count, 0) AS sms_sent_count,
 COALESCE(data_used_mb, 0.0) AS data_used_mb

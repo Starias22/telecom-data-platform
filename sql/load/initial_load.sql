@@ -38,8 +38,6 @@ FROM staging.offer_configurations AS oc
 LEFT JOIN staging.offer_billings AS ob on ob.id = oc.billing_id -- Left JOIN to also consider offers without billing
 JOIN staging.offers AS o ON o.id = oc.offer_id;
 
-
-SELECT COUNT(*) FROM dw.dim_offer;
 SELECT COUNT(*) FROM staging.offer_configurations;
 
 
@@ -62,8 +60,6 @@ c.gender, c.registration_date, c.status,  c.termination_date, c.registration_dat
 FROM staging.customers AS c 
 LEFT JOIN ref.cities AS cities ON cities.city = c.city; -- LEFT JOIN pour ne pas perdre les clients dont la ville napparait as dans la table des villes (ie les clients de ville invalide)
 
-
-SELECT COUNT(*) FROM dw.dim_customer;
 SELECT COUNT(*) FROM staging.customers;
 
 
@@ -74,7 +70,6 @@ INSERT INTO dw.dim_subscription(subscription_id, customer_id, registration_date,
 SELECT id, customer_id, registration_date, termination_date
 FROM staging.subscriptions;
 
-SELECT COUNT(*) FROM dw.dim_subscription;
 SELECT COUNT(*) FROM staging.subscriptions;
 
 
@@ -91,16 +86,13 @@ JOIN dw.dim_offer AS dof ON dof.offer_config_id = p.offer_config_id -- !!!Pourqu
 )
 SELECT purchase_id, TO_CHAR(purchase_date, 'YYYYMMDD')::INT AS purchase_date_key, customer_key, offer_config_id, revenue FROM purchase_details;
 
-
-SELECT COUNT(*) FROM dw.fact_purchase;
 SELECT COUNT(*) FROM staging.purchases;
-
 
 
 -- Fact consumption
 \echo '------------------------------------------------------------'
 \echo 'Populating fact_consumption'
-INSERT INTO dw.fact_consumption(purchase_id, consumption_date_key, customer_key, offer_config_id, call_duration_seconds, sms_sent_count, data_used_mb)
+INSERT INTO dw.fact_consumption(purchase_id, consumption_date_key, customer_key, call_duration_seconds, sms_sent_count, data_used_mb)
 WITH service_usage_deduplicated AS(
     SELECT * FROM staging.services_usage AS su WHERE NOT EXISTS (
         SELECT 1 FROM data_quality.issues AS i WHERE i.batch_id = su.batch_id AND table_name = 'services_usage' AND issue_type = 'Uniqueness' AND i.record_id = su.id :: TEXT
@@ -124,7 +116,7 @@ SELECT purchase_id, subscription_id, consumption_date_key, call_duration_seconds
 FROM customer_purchase_consumption_daily_events_aggregated WHERE rn = 1
 ),
 consumption_details AS (
-SELECT purchase_id, consumption_date_key, customer_key, offer_config_id,
+SELECT purchase_id, consumption_date_key, customer_key,
 COALESCE(call_duration_seconds, 0),
 COALESCE(sms_sent_count, 0),
 COALESCE(data_used_mb, 0.0)
@@ -134,7 +126,6 @@ JOIN staging.subscriptions AS s ON s.id = su.subscription_id
 JOIN dw.dim_customer AS dc ON dc.customer_id = s.customer_id
 )
 SELECT * FROM consumption_details;
-
 
 WITH service_usage_deduplicated AS(
     SELECT * 
@@ -150,6 +141,5 @@ service_usage_aggregated AS(
 SELECT purchase_id, timestamp:: DATE AS usage_date FROM service_usage_deduplicated GROUP BY purchase_id, usage_date
 )
 SELECT COUNT(*) FROM service_usage_aggregated;
-SELECT COUNT(*) FROM dw.fact_consumption;
 
 COMMIT;
