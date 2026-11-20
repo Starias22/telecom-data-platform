@@ -1,5 +1,5 @@
 from pathlib import Path
-PROJECT_ROOT = "/home/starias/myprojects/telecom-offer-performance-analytics-platform"
+PROJECT_ROOT = "/home/starias/myprojects/telecom-data-platform"
 
 DATA_DIR = Path(PROJECT_ROOT) / "data"
 RAW_DATA_DIR = Path(DATA_DIR) / "raw"
@@ -27,6 +27,11 @@ INITIAL_LOAD_SQL_FILE_PATH = SQL_LOAD_DIR / "initial_load.sql"
 INCREMENTAL_LOAD_SQL_FILE_PATH = SQL_LOAD_DIR / "incremental_load.sql"
 
 ENV_FILE_PATH = Path(PROJECT_ROOT) / ".env"
+
+SQL_ANALYTICS_DIR = SQL_DIR / "analytics"
+CUSTOMERS_ACTIVITY_SQL_FILE_PATH = SQL_ANALYTICS_DIR / "customer_activity.sql"
+MT_VIEWS_REFRESH_SQL_FILE_PATH = SQL_ANALYTICS_DIR / "refresh_mt_views.sql"
+
 
 
 
