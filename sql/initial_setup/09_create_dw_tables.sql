@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS dw.dim_customer(
         customer_key SERIAL PRIMARY KEY,   
         customer_id INT NOT NULL,
         customer_city VARCHAR(25) NOT NULL,
-        customer_department VARCHAR(20) NOT NULL,
+        customer_department VARCHAR(25) NOT NULL,
         customer_type VARCHAR(50) NOT NULL,
         customer_segment VARCHAR(50) NOT NULL,
         gender CHAR(1) CHECK (gender IN ('M', 'F')),

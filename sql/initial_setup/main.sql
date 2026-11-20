@@ -44,17 +44,20 @@ BEGIN;
 
 
 \echo '------------------------------------------------------------'
-\echo 'Creating datawarehouse tables(dim_date, dim_offer, dim_customer, dim_subscription, fact_purchase, fact_consumption )'
+\echo 'Creating data warehouse tables(dim_date, dim_offer, dim_customer, dim_subscription, fact_purchase, fact_consumption )'
 \ir 09_create_dw_tables.sql
 
 
 \echo '------------------------------------------------------------'
-\echo '\nSetting platform state'
-\ir 10_set_platform_state.sql
+\echo 'Creating analytical objects (materialided views for offer purchase and consumption analysis, table for customer acitivity analysis)'
+\ir 10_create_analytical_objects.sql
 
 \echo '------------------------------------------------------------'
+\echo 'Setting platform state (SETUP_COMPLETED)'
+\ir 11_set_platform_state.sql
 
 
+\echo '------------------------------------------------------------'
 
 \dn;
 \dt ref.*;
@@ -62,5 +65,6 @@ BEGIN;
 \dt staging.*
 \dt data_quality.*;
 \dt dw.*;
+\dt analytics.*;
 
 COMMIT;
