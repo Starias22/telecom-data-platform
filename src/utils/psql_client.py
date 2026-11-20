@@ -13,13 +13,15 @@ class PsqlClient:
                  [] if variable_assignment is None else ["-v", variable_assignment] 
             )
         
-        self.command =command 
+        self.command = command
         self.env = env
 
     def execute(self, input, is_sql_file=False):
         try:
+            command = self.command if not is_sql_file else self.command+ ["-f", input]
+            print(command)
             result = subprocess.run(
-                 self.command if not is_sql_file else self.command+ ["-f", input],
+                        command,
                         input=input if not is_sql_file else None,
                         env=self.env,
                         capture_output=True,

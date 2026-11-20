@@ -1,6 +1,4 @@
 import os
-import subprocess
-
 from dotenv import load_dotenv
 
 from config.paths import ENV_FILE_PATH, INITIAL_LOAD_SQL_FILE_PATH, INCREMENTAL_LOAD_SQL_FILE_PATH

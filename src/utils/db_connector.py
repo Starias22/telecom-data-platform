@@ -1,11 +1,11 @@
-import psycopg
+import psycopg2
 from config.config import DATA_PLATFORM_DB, USER, PASSDWORD, HOST
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 def get_connection():
-        connection = psycopg.connect() # Connection infos are automatically read from .env
+        connection = psycopg2.connect() # Connection infos are automatically read from .env
         user = connection.info.user
         db = connection.info.dbname
         port = connection.info.port

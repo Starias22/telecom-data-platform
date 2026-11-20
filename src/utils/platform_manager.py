@@ -1,12 +1,11 @@
 import os
-import subprocess
 
 from dotenv import load_dotenv
 
 from config.config import HOST, PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET, USER, PLATFORM_STATE_COL, PLATFORM_STATE_TABLE, SETUP_COMPLETED, INITIALIZED
 from config.paths import ENV_FILE_PATH, SQL_INITIAL_SETUP_MAIN_FILE_PATH
 from src.utils.db_connector import get_connection
-from psycopg.errors import UndefinedTable, OperationalError
+from psycopg2.errors import UndefinedTable, OperationalError
 
 from src.utils.logger import get_logger
 from src.utils.psql_client import PsqlClient
@@ -34,6 +33,23 @@ def get_platform_state():
               return PLATFORM_SETUP_NOT_DONE_OR_INCOMPLET
     return platform_state # Setup completed / Initialized
 
+def customer_activity_already_analyzed(analysis_month):
+    
+    connection = get_connection()
+       
+    query = f"""
+                SELECT EXISTS (SELECT 1 FROM pipeline_metadata.batch_logs WHERE started_at::DATE = '{analysis_month}' AND status='SUCCESS');
+                """
+    print(query)
+            
+    with connection.cursor() as cursor:
+            cursor.execute(query)
+            analyzed = cursor.fetchone()[0]
+            logger.info(f"Customer activity already analyzed this month? {'Yes' if analyzed else 'No'}")
+            return analyzed
+            
+    
+
 def is_platform_setup():
      platform_sate = get_platform_state()
      return platform_sate in [ SETUP_COMPLETED, INITIALIZED]
@@ -60,5 +76,9 @@ def mark_platform_initialized(connection):
         logger.info("Platform marked as initialized")
 
 if __name__ ==  "__main__":
-       output = setup_platform_database()
-       print(output)
+       # output = setup_platform_database()
+       # print(output)
+       # analyzed = check_customer_activity_analyzed('2026-11-18')
+       # print(analyzed)
+
+       pass

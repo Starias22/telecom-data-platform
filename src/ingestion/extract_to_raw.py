@@ -1,4 +1,3 @@
-from os import makedirs
 import os
 from pathlib import Path
 import subprocess
@@ -38,7 +37,7 @@ def extract_from_db_table(batch_id, extraction_output_dir, table_name, watermark
     last_update_date = extraction_params["update_date_col"]
     output_path = extraction_params["output_path"]
     
-    makedirs(extraction_output_dir, exist_ok=True)
+    os.makedirs(extraction_output_dir, exist_ok=True)
     output_path = str(output_path)
     temp_output_file = str(output_path) + ".tmp"
     query = f"""
@@ -96,7 +95,7 @@ def extract_purchases(extraction_output_dir, batch_id, watermark, extraction_cut
               output_file_path = f"{extraction_output_dir}/purchases.csv"
               temp_output_file = output_file_path + ".tmp"
               
-              makedirs(extraction_output_dir, exist_ok=True)
+              os.makedirs(extraction_output_dir, exist_ok=True)
 
 
               # query = f"""COPY(
@@ -123,15 +122,14 @@ def extract_purchases(extraction_output_dir, batch_id, watermark, extraction_cut
               raise RuntimeError(str(e)) from e
 
 
-def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "services_usage.csv"):
-        
+def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "services_usage.csv"):        
         try:
             consumer = KafkaConsumer(
             KAFKA_TOPIC,
             bootstrap_servers = KAFKA_SERVERS,
             enable_auto_commit=False,
             auto_offset_reset="earliest",
-            group_id = "batch-consumer-test-1", # !!! PLus tard Gerer cas ou les messages ont ete conomes mais une erreur faisant que ... k=jusqu la fin
+            group_id = "batch-consumer-test-75", # !!! PLus tard Gerer cas ou les messages ont ete conomes mais une erreur faisant que ... k=jusqu la fin
             consumer_timeout_ms = 5000
             )      
             message_records = []
@@ -169,7 +167,7 @@ def extract_service_usage(extraction_output_dir, batch_id, output_file_name = "s
             # !!! Later handle scalability for ex by usin chuncsize? and avoid stroing all  the usage_df.... in the memory
             ### !!!Hqndle cqse zhere there is no record fethec
 
-            makedirs(extraction_output_dir, exist_ok=True)
+            os.makedirs(extraction_output_dir, exist_ok=True)
             usage_df.to_csv(f"{extraction_output_dir}/{output_file_name}", index=False)
             # Now that all the messages have been consumed and the file has been saved we can commit to notify Kafka that we have read them
             # This avoid lossing ie not processing some events caused by an instance of the task extraction of service usage which failed ...

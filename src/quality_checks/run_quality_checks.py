@@ -1,9 +1,8 @@
 import os
-import subprocess
 
 from dotenv import load_dotenv
 
-from config.paths import SQL_INITIAL_SETUP_MAIN_FILE_PATH, ENV_FILE_PATH, SQL_QUALITY_CHECKS_FILE_PATH
+from config.paths import ENV_FILE_PATH, SQL_QUALITY_CHECKS_FILE_PATH
 from config.config import HOST, DATA_PLATFORM_DB, USER
 from src.utils.psql_client import PsqlClient
 from src.utils.logger import get_logger

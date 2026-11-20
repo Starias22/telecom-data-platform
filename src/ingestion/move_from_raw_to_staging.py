@@ -1,5 +1,3 @@
-import os
-import subprocess
 
 from config.config import HOST, USER, get_staging_params, DATA_PLATFORM_DB
 
@@ -61,7 +59,7 @@ def move_to_staging(staging_raw_data_dir):
                ).execute(
                        input=query
                )
-        num_records = get_num_records(output) # Take just offers, billings, offer configs, customers, and subscriptions
+        num_records = get_num_records(output)
         print(output)
         print(tables_list)
         print(num_records)
@@ -69,6 +67,4 @@ def move_to_staging(staging_raw_data_dir):
         num_records_df = pd.DataFrame({"Table":tables_list, "Num records moved": num_records})
         logger.info(f"\nReport of the data moved from Raw to Staging:\n {num_records_df.to_string(index=False)}\n {'-' * 100}")
         
-        
-
 # move_to_staging("/home/starias/myprojects/telecom-offer-performance-analytics-platform/data/raw/2026-10-14")

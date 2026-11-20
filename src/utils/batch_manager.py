@@ -1,3 +1,5 @@
+from psycopg2.errors import UndefinedTable, OperationalError
+
 from config.config import BATCH_LOGS_TABLE, BATCH_STATUS_COL, RUNNING,SUCCES, BATCH_ID_COL, STARTED_AT, COMPLETED_AT, BATCH_ERROR_MESSAGE_COL
 from src.utils.db_connector import get_connection
 from src.utils.platform_manager import mark_platform_initialized
@@ -8,22 +10,31 @@ logger = get_logger(__name__)
 
 def start_batch():
         logger.info("Starting batch")
-        connection = get_connection()
-        query = f"""
-                INSERT INTO {BATCH_LOGS_TABLE} ({BATCH_STATUS_COL}) VALUES ('{RUNNING}') RETURNING {BATCH_ID_COL}, {STARTED_AT};
-                """
-        print(query)
-        with connection.cursor() as cursor:
-                cursor.execute(
-                    query    
-                )
+        
+        try:
+            connection = get_connection()
+            query = f"""
+                    INSERT INTO {BATCH_LOGS_TABLE} ({BATCH_STATUS_COL}) VALUES ('{RUNNING}') RETURNING {BATCH_ID_COL}, {STARTED_AT};
+                    """
+            print(query)
+            with connection.cursor() as cursor:
+                    cursor.execute(
+                        query    
+                    )
+                    
+                    batch_id= cursor.fetchone()[0]
+                    
+                    connection.commit()
+                    logger.info(f"Batch {batch_id} started")
+                    return batch_id
+
+        except OperationalError as e:
+                if "database" in str(e) and "does not exist" in str(e):
+                               raise RuntimeError("Platform setup ot done or incomplete") from e
+        except UndefinedTable as e:
+                      raise RuntimeError("Platform setup ot done or incomplete") from e
                 
-                batch_id= cursor.fetchone()[0]
                 
-                connection.commit()
-                logger.info(f"Batch {batch_id} started")
-                
-                return batch_id
         
         
 
