@@ -3,7 +3,6 @@ export SUPERSET_CONFIG_PATH="$(pwd)/superset/config.py"
 export FLASK_APP=superset
 
 
-
 superset db upgrade
 
 superset fab create-admin
