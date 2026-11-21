@@ -132,7 +132,7 @@ The loading processes implement appropriate Slowly Changing Dimension (SCD) stra
 
 ### Analytics Layer
 
-![alt text](image-11.png)
+![alt text](./docs/resources/analytical_objects.png)
 
 ### Business Intelligence
 
