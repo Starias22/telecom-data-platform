@@ -14,11 +14,9 @@ The platform uses Python and Apache Airflow to manage and orchestrate batch work
 
 - [Project Overview](#project-overview)
 - [Business Context and Objectives](#business-context-and-objectives)
-- [Data Architecture](#data-architecture)
-- [Technology Stack](#technology-stack)
+- [Architecture and Technology Stack](#architecture-and-technology-stack)
 - [Data Sources](#data-sources)
 - [Data Pipeline](#data-pipeline)
-- [Data Warehouse](#data-warehouse)
 - [Pipeline Orchestration](#pipeline-orchestration)
 - [Analytical Use Cases](#analytical-use-cases)
 - [Project Structure](#project-structure)
@@ -30,31 +28,31 @@ The platform uses Python and Apache Airflow to manage and orchestrate batch work
 
 [Business Requirements](./docs/01_business_requirements/business_requirements.md)
 
+## Architecture and Technology Stack
 
-## Data Architecture and Technology Stack
-
-### Data Architecture
+### Data Platform Architecture
 
 ![Telecom Data Platform Architecture](./docs/resources/data_pipeline.png)
 
 The platform follows a batch-oriented data architecture:
 
-Data Sources → Extraction → Raw Layer → Staging Layer → Data Quality Checks → Data Warehouse → Analytics
+Data Sources → Extraction → Raw → Staging → Data Quality Checks → Data Warehouse → Analytics → Busines Intelligence
 
-Apache Airflow orchestrates the different stages of the data pipelines.
+Apache Airflow orchestrates the different stages of the data pipeline.
 
 
 ### Technology Stack
 
 | Technology | Purpose |
 -------------|------------
-Python | Implements ingestion scripts, manages files, consumes Kafka events in batches and executes PostgreSQL commands.
-PostgreSQL| Stores Raw and Staging data, data quality issues and the Data Warehouse.
+Python | Implements ingestion scripts, manages files, consumes Kafka events in batches and executes PostgreSQL commands and files.
+PostgreSQL| Stores Raw and Staging data, data quality issues, the Data Warehouse.
 psql| Executes SQL commands for database extraction into the Raw layer as CSV, Raw-to-Staging transfers, data quality checks, transformations and warehouse loading.
 DuckDB| Reads Parquet files and extracts purchase data into the Raw layer as CSV files.
+SQL| Implements extraction, data quality checks, transformations and loading operations.
 Apache Kafka| Provides service usage events consumed periodically in batches.
 Apache Airflow| Orchestrates batch workflows, manages task dependencies, retries and failures.
-SQL| Implements extraction, data quality checks, transformations and loading operations.
+Apache Superset| ....
 
 
 See [Architecture and Technology Decisions](./docs/03_architecture/architecture_and_tech_decisions.md ) for a detailed explanation of the architecture and technology choices.
@@ -94,6 +92,9 @@ Raw data is transferred into PostgreSQL staging tables using psql \copy command.
 
 The Staging layer provides an intermediate area for data quality checks and preparation before warehouse loading.
 
+
+![alt text](./docs/resources/staging_tables.png)
+
 ### Data Quality
 
 SQL-based data quality checks are executed in PostgreSQL through "psql".
@@ -106,23 +107,34 @@ The checks cover:
 - Uniqueness.
 - Referential integrity.
 
-Quality results and data acceptance or rejection decisions are tracked using via PostgreSQL table.
+Quality results and data acceptance or rejection decisions are tracked using PostgreSQL table.
+
+
+![alt text](./docs/resources/dq_issues_table.png)
 
 ### Data Transformation and Loading
 
 Data transformations and warehouse loading are implemented using SQL queries executed through "psql".
 
-The processes include data standardization, handling of missing or invalid values, derivation of analytical attributes, aggregation of service consumption, and initial and incremental loading.
+The processes include data standardization, handling of missing or invalid values, derivation of analytical attributes, aggregation of service consumption by consumption date, and initial or incremental loading.
 
-## Data Warehouse
+### Data Warehouse
 
-The platform uses a PostgreSQL dimensional data warehouse based on a star schema.
+The platform uses a PostgreSQL dimensional data warehouse.
 
 The model includes fact tables for telecom offer purchases and service consumption, supported by dimensions such as date, customer, subscription and offer.
+
+![Data Warehouse Tables](./docs/resources/dw_tables.png)
 
 ![Data Warehouse Model](./docs/resources/erds/images/dw_erd.png)
 
 The loading processes implement appropriate Slowly Changing Dimension (SCD) strategies to manage dimension updates and preserve relevant historical information.
+
+### Analytics Layer
+
+![alt text](image-11.png)
+
+### Business Intelligence
 
 ## Pipeline Orchestration
 
