@@ -162,7 +162,7 @@ It consists of:
 - **Materialised views** to store precomputed analytical results and improve query performance.
 - **Analytical tables** to store prepared datasets for specific business analyses.
 
-![Analytical Objects](./docs/resources/dashboards/analytical_objects.png)
+![Analytical Objects](./docs/resources/analytical_objects.png)
 
 This layer centralises data access logic, reduces repetitive complex joins in BI queries, and provides structured datasets for dashboard development.
 
@@ -172,7 +172,7 @@ Following successful data warehouse loads, the pipeline regularly refreshes the 
 
 Five interactive dashboards were developed using Apache Superset to address the project's main business analysis requirements.
 
-![alt text](./docs/resources/dashboards_list.png)
+![alt text](./docs/resources/dashboards/dashboards_list.png)
 
 #### 1. Offer Performance
 
