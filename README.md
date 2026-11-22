@@ -65,7 +65,7 @@ CRM| Customer information| PostgreSQL
 Subscription Management System| Mobile subscription information| PostgreSQL
 Offer Management System| Telecom offer catalogue| PostgreSQL
 Transaction Management System| Offer purchases | Parquet
-Usage Mediation System| Data, voice and SMS usage events| Kafka
+Usage Mediation System| DATA, CALL and SMS usage events| Kafka
 
 ## Data Pipeline
 
@@ -86,6 +86,8 @@ The Raw layer stores extracted data before further processing.
 It preserves the original source data and associates records or files with the identifier of the current batch.
 Data in the Raw Layer is organized by date and by batch identifier.
 
+![Raw Directoory Structure](./docs/resources/raw_directory_structure.png)
+
 ### Staging Layer
 
 Raw data is transferred into PostgreSQL staging tables using psql \copy command.
@@ -93,7 +95,7 @@ Raw data is transferred into PostgreSQL staging tables using psql \copy command.
 The Staging layer provides an intermediate area for data quality checks and preparation before warehouse loading.
 
 
-![alt text](./docs/resources/staging_tables.png)
+![Staging Tables](./docs/resources/staging_tables.png)
 
 ### Data Quality
 
@@ -110,7 +112,7 @@ The checks cover:
 Quality results and data acceptance or rejection decisions are tracked using PostgreSQL table.
 
 
-![alt text](./docs/resources/dq_issues_table.png)
+![Data Quality Issues Table](./docs/resources/dq_issues_table.png)
 
 ### Data Transformation and Loading
 
@@ -132,7 +134,7 @@ The loading processes implement appropriate Slowly Changing Dimension (SCD) stra
 
 ### Analytics Layer
 
-![alt text](./docs/resources/analytical_objects.png)
+![Analytical Objects](./docs/resources/analytical_objects.png)
 
 ### Business Intelligence
 
@@ -167,7 +169,5 @@ The Data Warehouse supports analytical use cases such as:
 
 Potential improvements include:
 
-- Expanding analytical use cases.
 - Adding automated data pipeline tests.
 - Improving pipeline monitoring and observability.
-- Developing business intelligence dashboards.
