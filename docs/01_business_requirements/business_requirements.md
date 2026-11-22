@@ -25,9 +25,9 @@ Quelles offres télécoms présentent les meilleures performances commerciales e
 KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 ---------|-----------------------|--------|--------|
 1 | Performance financière de chaque offre | Chiffre d'affaires généré par chaque offre | Somme des montants de tous les achats de l'offre effectués pendant la période d'analyse |
-2 | Attractivité commerciale de chaque offre | Nombre de clients acheteurs distincts de chaque offre | Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse |
-3 | Adoption de chaque offre | Taux de pénétation de chaque offre | (Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse)  / ( Nombre total de clients actifs pendant la période d'analyse) |
-4 | Dynamique Commerciale de chaque offre | Nombre d'achats de chaque offre | Nombre total d'achats de l'offre effectués pendant la période d'analyse |
+2 | Dynamique Commerciale de chaque offre | Nombre d'achats de chaque offre | Nombre total d'achats de l'offre effectués pendant la période d'analyse |
+3 | Attractivité commerciale de chaque offre | Nombre de clients acheteurs distincts de chaque offre | Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse |
+4 | Adoption de chaque offre | Taux de pénétation de chaque offre | (Nombre de clients distincts ayant acheté l'offre au moins une fois pendant la période d'analyse)  / ( Nombre total de clients actifs pendant la période d'analyse) |
 
 #### 4. Axes d'Analyse
 - Analyse par
@@ -87,8 +87,7 @@ KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 
 KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 ---------|-----------------------|--------|--------|
-1 | - | Taux global de consommation des bénéfices | Pour les offres MAXI: (Somme des équivalents en FCFA consommés pour tous les services utilisés) / (Somme des valeurs totales en FCFA accordées) |
-1 | - | Taux global de consommation des bénéfices | Pour les offres INTERNET: (Somme des MB consommés ) / (Somme des MB accordés) |
+1 | - | Taux global de consommation des bénéfices | Pour les offres MAXI: (Somme des équivalents en FCFA consommés pour tous les services utilisés) / (Somme des valeurs totales en FCFA accordées)  Pour les offres INTERNET: (Somme des MB consommés ) / (Somme des MB accordés) |
 2 |- | Contribution de la consommation Data à la consommation globale (Uniquement pour les offres BUNDLE) | (Somme des équivalents FCFA des MB consommés) / (Somme des valeurs totales en FCFA accordées) |
 3 | - | Contribution de la consommation d'appels à la consommation globale (Uniquement pour les offres MAXI) | (Somme des équivalents FCFA des appels effectués) / (Somme des valeurs totales en FCFA accordées) |
 4 | - | Contribution de la consommation de SMS à la consommation globale (Uniquement pour les offres MAXI) | (Somme des équivalents FCFA des SMS envoyés) / (Somme des valeurs totales en FCFA accordées) |
@@ -124,11 +123,9 @@ KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 
 KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 ---------|-----------------------|--------|--------|
-1 | - | Taux de croissance des clients actifs par région | (Nombre de clients actifs dans la région pendant la période actuelle - Nombre de clients actifs dans la région pendant période précédente) / ombre de clients actifs dans la région pendant période précédente |
+1 | - | Taux de croissance des clients actifs par région | (Nombre de clients actifs dans la région pendant la période actuelle - Nombre de clients actifs dans la région pendant période précédente) / Nombre de clients actifs dans la région pendant période précédente |
 2 | - | Taux de croissance des achats par région | (Nombre d'achats effectués dans la région  au cours de la période actuelle - Nombre d'achats effectués dans la région au cours de la période précédente) / Nombre d'achats effectués dans la région au cours de la période précédente |
 3 | - | Taux de croissance du chiffre d'affaires par région | (Chiffre d'affaires de la région durant la période actuelle - Chiffre d'affaires de la région durant la période précédente) / Chiffre d'affaires de la région durant la période précédente |
-4 | - | Chiffre d'affaires moyen généré par client actif par région | (Chiffre d'affaires généré par la région) / Nombre total de clients actifs dans la région |
-
 [!!!Prendre la photo de la page ou jai demontre la formule , pis linserer pkus tart icic]
 
 #### 4. Axes d'Analyse
@@ -162,7 +159,7 @@ KPI n°| Dimension évaluée/mesurée | KPI | Formule / Description |
 ---------|-----------------------|--------|--------|
 1 | - | L'évolution du nombre d'achats effectués par le client | (Nombre d'achat effectués par le client pendant la période actuelle - Nombre d'achats effectués par le client pendant période précédente) / Nombre d'achats effectués par le client pendant période précédente |
 2 | - | L'évolution de la consommation DATA du client | (Quantité de MB consommés par le client pendant la période actuelle - Quantité de MB consommés par le client pendant la période précédente) / Quantité de MB consommés par le client pendant la période précédente |
-3 | - | L'évolution de la consommation CALL du client | (Nombre total de secondes des appels effectués par le client pendant la période actuelle - Nombre total de secondes des appels effectués par le client pendant la période précédente) / Quantité de MB consommés par le client pendant la période précédente |
+3 | - | L'évolution de la consommation CALL du client | (Nombre total de secondes des appels effectués par le client pendant la période actuelle - Nombre total de secondes des appels effectués par le client pendant la période précédente) / Nombre total de secondes des appels effectués par le client pendant la période précédente |
 4 | - | L'évolution de la consommation SMS du client | (Nombre total de SMS envoyés par le client pendant la période actuelle - Nombre total de SMS envoyés par le client pendant la période précédente) / Nombre total de SMS envoyés par le client pendant la période précédente |
 5 | - | Effectif des clients sans activité pendant les deux périodes consécutives d'analyse | Nombre total de clients  sans activité pendant les deux périodes consécutives d'analyse |
 6 | - | Pourcentage des clients sans activité pendant les deux périodes consécutives d'analyse | (Nombre total de clients  sans activité pendant les deux périodes consécutives d'analyse) * 100 / Nombre total de clients analyés |
