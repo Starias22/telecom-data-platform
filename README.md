@@ -17,8 +17,9 @@ The platform uses Python and Apache Airflow to manage and orchestrate batch work
 - [Architecture and Technology Stack](#architecture-and-technology-stack)
 - [Data Sources](#data-sources)
 - [Data Pipeline](#data-pipeline)
+- [Data Warehouse](#data-warehouse)
+- [Analytics and Dashboards](#analytics-and-dashboards)
 - [Pipeline Orchestration](#pipeline-orchestration)
-- [Analytical Use Cases](#analytical-use-cases)
 - [Project Structure](#project-structure)
 - [Installation and Execution](#installation-and-execution)
 - [Future Improvements](#future-improvements)
@@ -26,7 +27,23 @@ The platform uses Python and Apache Airflow to manage and orchestrate batch work
 
 ## Business Context and Objectives
 
-[Business Requirements](./docs/01_business_requirements/business_requirements.md)
+### Business Context
+
+This project is based on a fictional telecommunications operator in Benin. The operator generates data multiple business systems, including CRM, subscriptions, telecom offers, purchases and service usage.
+
+Bringing these data sources together provides a foundation for monitoring business performance, understanding customer behaviour, and supporting data-driven decision-making.
+
+### Project Objectives
+
+The main objective is to build a centralized data platform that transform data from heteregeneous sources into reliable, structured, and actionable information.
+
+The platform aims to support business analysis in the following areas:
+- Telecom offer performance and adequacy
+- Revenue distribution accross customer segments
+- Regional business growth
+- Customer activity and engagement
+
+The detailed business requirements and analytical questions are documented here: [Business Requirements](./docs/01_business_requirements/business_requirements.md)
 
 ## Architecture and Technology Stack
 
@@ -120,7 +137,8 @@ Data transformations and warehouse loading are implemented using SQL queries exe
 
 The processes include data standardization, handling of missing or invalid values, derivation of analytical attributes, aggregation of service consumption by consumption date, and initial or incremental loading.
 
-### Data Warehouse
+
+## Data Warehouse
 
 The platform uses a PostgreSQL dimensional data warehouse.
 
@@ -132,11 +150,126 @@ The model includes fact tables for telecom offer purchases and service consumpti
 
 The loading processes implement appropriate Slowly Changing Dimension (SCD) strategies to manage dimension updates and preserve relevant historical information.
 
-### Analytics Layer
+## Analytics and Dashboards
 
-![Analytical Objects](./docs/resources/analytical_objects.png)
+### PostgreSQL Analytics Layer
 
-### Business Intelligence
+A dedicated PostgreSQL analytics layer was developed to provide simplified, business-oriented access to the data warehouse for business intelligence and reporting.
+
+It consists of:
+
+- **Standard views** to organise and expose data from the data warehouse.
+- **Materialised views** to store precomputed analytical results and improve query performance.
+- **Analytical tables** to store prepared datasets for specific business analyses.
+
+![Analytical Objects](./docs/resources/dashboards/analytical_objects.png)
+
+This layer centralises data access logic, reduces repetitive complex joins in BI queries, and provides structured datasets for dashboard development.
+
+Following successful data warehouse loads, the pipeline regularly refreshes the relevant analytical objects to keep reporting data up to date.
+
+### Superset Dashboards
+
+Five interactive dashboards were developed using Apache Superset to address the project's main business analysis requirements.
+
+![alt text](./docs/resources/dashboards_list.png)
+
+#### 1. Offer Performance
+
+Evaluates the commercial and financial performance of telecom offers at different levels of the offer hierarchy: individual offers, offer categories, and offer families. It helps identify the offers contributing most to revenue and customer adoption.
+
+**Offer-Level Analysis**
+
+![Offer-Level Analysis](./docs/resources/dashboards/q1_offer_performance/offer_level.png)
+
+
+**Offer Category Analysis**
+
+![Offer Category Analysis](./docs/resources/dashboards/q1_offer_performance/offer_category.png)
+
+**Offer Family Analysis**
+
+![Offer Family Analysis](./docs/resources/dashboards/q1_offer_performance/offer_family.png)
+
+---
+
+#### 2. Segment Revenue
+
+Analyses revenue contribution across customer segments and compares their financial performance.
+
+**Revenue Analysis by Customer Segment**
+
+![Revenue Analysis by Customer Segment](docs/resources/dashboards/q2_customer_segment_revenue/dashboard.png)
+
+---
+
+#### 3. Offer Suitability Analysis
+
+Evaluates how well telecom offers align with customer consumption patterns by analysing the utilisation of allocated benefits, including mobile data, voice calls, and SMS. Consumption rates help identify whether customers fully utilise their allocated benefits or leave a significant portion unused.
+
+**Offer-Level Analysis**
+
+![Offer-Level Analysis](./docs/resources/dashboards/q3_offer_suitability/offer_level.png)
+
+
+**Offer Category Analysis**
+
+![Offer Category Analysis](./docs/resources/dashboards/q3_offer_suitability/offer_category.png)
+
+
+**Offer Family Analysis**
+
+![Offer Family Analysis](./docs/resources/dashboards/q3_offer_suitability/offer_family.png)
+
+---
+
+#### 4. Regional Growth
+
+Tracks changes in customer activity and commercial performance across regions and cities. It compares reporting periods to highlight regional growth patterns.
+
+**Active Customer Growth by Region**
+
+![Active Customer Growth by Region](docs/resources/dashboards/q4_regional_growth/active_customer_growth.png)
+
+
+**Purchase Growth by Region**
+
+![Purchase Growth by Region](docs/resources/dashboards/q4_regional_growth/purchases.png)
+
+
+**Revenue Growth by Region**
+
+![Revenue Growth by Region](docs/resources/dashboards/q4_regional_growth/revenue.png)
+
+---
+
+#### 5. Customer Activity
+
+Provides insights into customer engagement by presenting an overall activity overview, analysing the distribution of activity statuses, and providing detailed customer-level information.
+
+**Activity Overview**
+
+![Activity Overview](docs/resources/dashboards/q5_customer_activity/activity_overview.png)
+
+**Activity Distribution**
+
+![Activity Distribution](docs/resources/dashboards/q5_customer_activity/activity_distribution.png)
+
+**Activity Details**
+![Activity Details](docs/resources/dashboards/q5_customer_activity/activity_details_per_customer.png)
+
+---
+
+### Dashboard Features
+
+The dashboards provide interactive analytical capabilities, including:
+
+- **Interactive filtering:** exploring data by reporting period and relevant business dimensions, depending on the dashboard.
+- **KPI monitoring:** tracking key commercial, financial, consumption, and customer activity indicators.
+- **Period comparisons:** examining changes and growth between selected reporting periods.
+- **Multi-level analysis:** exploring offer performance at offer, category, and family levels, as well as regional and customer-segment performance.
+
+Together, the PostgreSQL analytics layer and Superset dashboards transform integrated telecom data into actionable business insights, supporting performance monitoring and data-driven decision-making.
 
 ## Pipeline Orchestration
 
@@ -150,18 +283,7 @@ The orchestration layer manages:
 - Task retries and failure handling.
 - Pipeline execution status and recovery.
 
-## Analytical Use Cases
-
-The Data Warehouse supports analytical use cases such as:
-
-- Customer distribution by region and segment.
-- Telecom offer performance and adoption.
-- Offer purchase trends.
-- Daily and monthly data, voice and SMS consumption.
-- Customer purchasing and consumption behaviour.
-
 ## Project Structure
-
 
 ## Installation and Execution
 
