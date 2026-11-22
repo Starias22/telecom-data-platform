@@ -250,7 +250,7 @@ SELECT
 
 FROM activity_growth  
 )
-INSERT INTO analytics.customer_activity (analysis_month, customer_id, customer_type, customer_segment, customer_city, customer_department, current_purchases, previous_purchases, purchases_growth_rate, current_data_used_mb, previous_data_used_mb, data_consumption_growth_rate, current_call_duration_seconds, previous_call_duration_seconds, call_consumption_growth_rate, current_sms_sent_count, previous_sms_sent_count, sms_consumption_growth_rate, decreasing_metrics_count, activity_status)
+INSERT INTO analytics.customer_activity_analysis (analysis_month, customer_id, customer_type, customer_segment, customer_city, customer_department, current_purchases, previous_purchases, purchases_growth_rate, current_data_used_mb, previous_data_used_mb, data_consumption_growth_rate, current_call_duration_seconds, previous_call_duration_seconds, call_consumption_growth_rate, current_sms_sent_count, previous_sms_sent_count, sms_consumption_growth_rate, decreasing_metrics_count, activity_status)
 SELECT
     am.start_date AS analysis_month,
     adm.customer_id,

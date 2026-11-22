@@ -13,7 +13,7 @@ SELECT
 FROM dw.dim_customer;
 
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_offer_purchases AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS analytics.mv_offer_purchase AS
 SELECT    
     full_date AS purchase_date,
     purchase_id,
@@ -121,7 +121,7 @@ SELECT
 FROM y;
 
 
-CREATE TABLE IF NOT EXISTS analytics.customer_activity (
+CREATE TABLE IF NOT EXISTS analytics.customer_activity_analysis (
     analysis_month DATE DEFAULT DATE_TRUNC('month', CURRENT_DATE)::DATE,
     customer_id INT NOT NULL ,--!!! should reference dw.dim_customers?
     customer_type VARCHAR(50) NOT NULL,--!!! should reference dw.dim_customers?
