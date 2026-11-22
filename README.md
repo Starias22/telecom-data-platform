@@ -291,5 +291,5 @@ The orchestration layer manages:
 
 Potential improvements include:
 
-- Adding automated data pipeline tests.
+- Automating data pipeline tests.
 - Improving pipeline monitoring and observability.
