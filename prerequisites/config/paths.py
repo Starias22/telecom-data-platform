@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-PROJECT_ROOT_DIR = Path("/home/starias/myprojects/telecom-offer-performance-analytics-platform/")
+PROJECT_ROOT_DIR = Path("/home/starias/myprojects/telecom-data-platform/")
 
 PREREQUISITES_DIR = PROJECT_ROOT_DIR / "prerequisites"
 PREREQUISITES_OUTPUTS_DIR = PREREQUISITES_DIR / "outputs"

@@ -1,7 +1,9 @@
 # !!!Declarer les variables pour eviter de repeter les chemins de fichier
-mkdir -p ~/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/systems
 
-cd ~/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/systems
+SYSTEMS_DIR="/home/starias/myprojects/telecom-data-platform/prerequisites/outputs/systems"
+mkdir -p "$SYSTEMS_DIR"
+
+cd "$SYSTEMS_DIR"
 
 
 wget -nc https://downloads.apache.org/kafka/4.3.1/kafka_2.13-4.3.1.tgz
@@ -36,5 +38,5 @@ sleep 5
 # ./kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic TelecomUsage --from-beginning
 
 # ./kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092 --delete --topic TelecomUsage
-# /kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092 --delete --topic __consumer_offsets
+# ./kafka/bin/kafka-topics.sh  --bootstrap-server localhost:9092 --delete --topic __consumer_offsets
  

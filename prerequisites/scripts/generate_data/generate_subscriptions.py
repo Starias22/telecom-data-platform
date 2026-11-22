@@ -16,14 +16,20 @@ def generate_subscriptions():
         TODAY = now.date()
 
         rng = np.random.default_rng(SEED)
+         
+        customers_df = pd.read_csv(CUSTOMER_RECORDS_FILE, usecols=[ID_COL, REGISTRATION_DATE_COL]).rename(columns={REGISTRATION_DATE_COL:CUSTOMER_REGISTRATION_DATE_COL})
+        print(customers_df)
+
+        num_customers = len(customers_df)
+        
 
         subscription_counts = rng.choice(
-                list(SUBSCRIPTIONS_COUNT_PROBABILITIES.keys()), p=list(SUBSCRIPTIONS_COUNT_PROBABILITIES.values()), size=NUM_CUSTOMERS)
+                list(SUBSCRIPTIONS_COUNT_PROBABILITIES.keys()), p=list(SUBSCRIPTIONS_COUNT_PROBABILITIES.values()), size=num_customers)
 
         subsriptions_num = sum(subscription_counts)
         print(subscription_counts)
         print(f"Total Number of subscriptions: {subsriptions_num}")
-        customer_ids = np.arange(1, NUM_CUSTOMERS + 1)
+        customer_ids = np.arange(1, num_customers + 1)
         print(customer_ids)
 
         subscription_customer_ids = np.repeat(customer_ids, subscription_counts)
@@ -54,11 +60,6 @@ def generate_subscriptions():
         subsriptions_df[STATUS_COL] = rng.choice(list(SUBSCRIPTION_STATUS_PROBABILITIES.keys()), p=list(SUBSCRIPTION_STATUS_PROBABILITIES.values()), size=subsriptions_num)
 
         TODAY = date.today()
-
-
-
-        customers_df = pd.read_csv(CUSTOMER_RECORDS_FILE, usecols=[ID_COL, REGISTRATION_DATE_COL]).rename(columns={REGISTRATION_DATE_COL:CUSTOMER_REGISTRATION_DATE_COL})
-        print(customers_df)
 
         subsriptions_df = subsriptions_df.merge(customers_df, left_on=CUSTOMER_ID_COL, right_on=ID_COL)
         print(subsriptions_df)
@@ -100,8 +101,6 @@ def generate_subscriptions():
         print("Saving subscription records to CSV file")
         subsriptions_df.to_csv(SUBSCRIPTIONS_RECORDS_FILE, index=False)
         print("Done")
-
-
 
 if __name__ == "__main__":
         generate_subscriptions()

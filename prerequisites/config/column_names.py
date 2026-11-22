@@ -10,7 +10,7 @@ PHONE_NUMBER_COL = "phone_number"
 CITY_COL = "city"
 CUSTOMER_TYPE_COL = "customer_type"
 CUSTOMER_SEGMENT_COL =  "customer_segment"
-TYPE_COL = "type"
+CATEGORY_COL = "type"
 
 VALUE_XOF_COL = "value_xof"
 VALUE_MB_COL = "value_mb"

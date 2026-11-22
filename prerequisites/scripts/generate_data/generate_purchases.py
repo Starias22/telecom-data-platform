@@ -149,7 +149,8 @@ def generate_purchases():
         cpt += len(purchases_df)
 
         # if len(purchases_df) >= 5_000:
-        if len(purchases_df) >= 10: # For test
+        # if len(purchases_df) >= 10: # For test
+        if len(purchases_df) >= 100: # For test
         # if len(purchases_df) >= 1_000: # Ceci n'est pas la taille totale des achats mais juste la taillle pour un batch / journee donnee
             print(len(purchases_df))
             # print(purchases_df[[ID_COL, SUBSCRIPTION_ID_COL, PURCHASED_AT_COL, REGISTRATION_DATE_COL]])

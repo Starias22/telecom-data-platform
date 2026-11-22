@@ -136,15 +136,15 @@ CREATE USER starias22 WITH password 'my_password';
 GRANT data_engineer TO starias22;
 */
 
-\copy offers_catalog.offers FROM '/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/offers_catalog/offers.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',');
+\copy offers_catalog.offers FROM '/home/starias/myprojects/telecom-data-platform/prerequisites/outputs/sources/offers_catalog/offers.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',');
 
-\copy offers_catalog.offer_billings FROM '/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/offers_catalog/offer_billings.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',');
+\copy offers_catalog.offer_billings FROM '/home/starias/myprojects/telecom-data-platform/prerequisites/outputs/sources/offers_catalog/offer_billings.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',');
 
-\copy offers_catalog.offer_configurations FROM '/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/offers_catalog/offer_configurations.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',');
+\copy offers_catalog.offer_configurations FROM '/home/starias/myprojects/telecom-data-platform/prerequisites/outputs/sources/offers_catalog/offer_configurations.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',');
 
-\copy crm.customers FROM '/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/customers.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',')
+\copy crm.customers FROM '/home/starias/myprojects/telecom-data-platform/prerequisites/outputs/sources/customers.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',')
 
-\copy subscriptions.subscriptions FROM '/home/starias/myprojects/telecom-offer-performance-analytics-platform/prerequisites/outputs/sources/subscriptions.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',')
+\copy subscriptions.subscriptions FROM '/home/starias/myprojects/telecom-data-platform/prerequisites/outputs/sources/subscriptions.csv' WITH (FORMAT CSV, HEADER TRUE, DELIMITER ',')
 
 
 \dt offers_catalog.*;

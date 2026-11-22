@@ -27,7 +27,7 @@ def inject_issues():
         indexes = rng.choice(customers_df.index, size=count, replace=False)
         customers_df.loc[indexes, CUSTOMER_TYPE_COL] = NULL
         print(customers_df)
-
+    
         ### City names 
         #### in different formats: City names are mainly in capital case: inject lower, upper, and capital cases for some customer records
         customer_city_wrong_cases_rate = 0.5 / 100
