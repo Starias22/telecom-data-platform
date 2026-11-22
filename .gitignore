@@ -1,0 +1,10 @@
+.venv/
+.vscode/
+data/
+**/__pycache__/
+.env
+config/config.py
+superset/exports
+key.txt
+todo
+notes.md
