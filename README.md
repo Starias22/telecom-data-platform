@@ -49,7 +49,7 @@ The detailed business requirements and analytical questions are documented here:
 
 ### Data Platform Architecture
 
-![Telecom Data Platform Architecture](./docs/resources/data_pipeline.png)
+![Telecom Data Platform Architecture](./docs/resources/data_pipeline/data_platform_architecture.png)
 
 The platform follows a batch-oriented data architecture:
 
@@ -103,7 +103,7 @@ The Raw layer stores extracted data before further processing.
 It preserves the original source data and associates records or files with the identifier of the current batch.
 Data in the Raw Layer is organized by date and by batch identifier.
 
-![Raw Directoory Structure](./docs/resources/raw_directory_structure.png)
+![Raw Directoory Structure](./docs/resources/raw/raw_directory_structure.png)
 
 ### Staging Layer
 
@@ -112,7 +112,7 @@ Raw data is transferred into PostgreSQL staging tables using psql \copy command.
 The Staging layer provides an intermediate area for data quality checks and preparation before warehouse loading.
 
 
-![Staging Tables](./docs/resources/staging_tables.png)
+![Staging Tables](./docs/resources/staging/staging_tables.png)
 
 ### Data Quality
 
@@ -129,7 +129,7 @@ The checks cover:
 Quality results and data acceptance or rejection decisions are tracked using PostgreSQL table.
 
 
-![Data Quality Issues Table](./docs/resources/dq_issues_table.png)
+![Data Quality Issues Table](./docs/resources/dq/dq_issues_table.png)
 
 ### Data Transformation and Loading
 
@@ -144,9 +144,9 @@ The platform uses a PostgreSQL dimensional data warehouse.
 
 The model includes fact tables for telecom offer purchases and service consumption, supported by dimensions such as date, customer, subscription and offer.
 
-![Data Warehouse Tables](./docs/resources/dw_tables.png)
+![Data Warehouse Tables](./docs/resources/dw/dw_tables.png)
 
-![Data Warehouse Model](./docs/resources/erds/images/dw_erd.png)
+![Data Warehouse Model](./docs/resources/dw/dw_erd.png)
 
 The loading processes implement appropriate Slowly Changing Dimension (SCD) strategies to manage dimension updates and preserve relevant historical information.
 
@@ -162,7 +162,7 @@ It consists of:
 - **Materialised views** to store precomputed analytical results and improve query performance.
 - **Analytical tables** to store prepared datasets for specific business analyses.
 
-![Analytical Objects](./docs/resources/analytical_objects.png)
+![Analytical Objects](./docs/resources/analytics/analytical_objects.png)
 
 This layer centralises data access logic, reduces repetitive complex joins in BI queries, and provides structured datasets for dashboard development.
 
@@ -273,15 +273,93 @@ Together, the PostgreSQL analytics layer and Superset dashboards transform integ
 
 ## Pipeline Orchestration
 
-Apache Airflow orchestrates the batch data pipelines.
+### Apache Airflow
 
-The orchestration layer manages:
+Apache Airflow was used to orchestrate and manage the data platform workflows through three dedicated Directed Acyclic Graphs (DAGs).
 
-- Task dependencies and execution order.
-- Initial and incremental pipeline runs.
-- Batch tracking.
-- Task retries and failure handling.
-- Pipeline execution status and recovery.
+A custom **Pipeline Factory** was implemented to factorise and reuse the common orchestration logic shared by the initial and incremental data pipelines. This approach reduces code duplication and ensures consistency in task creation, dependencies, and execution logic across both workflows.
+
+The orchestration framework consists of three DAGs, each responsible for a specific stage of the data platform lifecycle.
+
+**Airflow DAGs Overview**
+
+![Airflow DAGs Overview](docs/resources/data_pipeline/dags/dags_overview.png)
+
+### 1. Data Platform Setup DAG
+
+This DAG handles the initialisation of the database environment and the creation of the objects required by the data platform.
+
+Its workflow consists of:
+
+- **Setup execution check:** verifies whether the platform initialisation needs to be performed.
+- **Platform initialisation:** creates the required PostgreSQL database objects, including schemas, tables, and other structures used by the staging layer, Data Warehouse, analytics layer, and pipeline metadata management.
+
+**Data Platform Setup DAG**
+
+![alt text](docs/resources/data_pipeline/dags/data_platform_setup_dag.png)
+
+
+
+### 2. Initial Data Pipeline DAG
+
+This DAG performs the initial historical data ingestion from the different source systems into the data platform.
+
+The workflow coordinates the following operations:
+
+- **Execution check:** verifies whether the initial pipeline can be executed.
+- **Batch initialisation:** creates a batch execution record and assigns a unique batch identifier.
+- **Watermark retrieval:** retrieves the initial extraction watermarks.
+- **Parallel data extraction:** extracts subscriptions, billings, customers, offer configurations, offers, purchases, and service usage data from their respective source systems.
+- **Staging:** transfers extracted data into the PostgreSQL staging layer while preserving batch traceability.
+- **Data quality checks:** validates data completeness, validity, consistency, uniqueness, and referential integrity.
+- **Data Warehouse loading:** transforms and loads validated data into the dimensional model.
+- **Watermark update:** updates extraction watermarks following successful loading.
+- **Analytics refresh:** refreshes the relevant materialised views after successful Data Warehouse loading to make the latest analytical data available for reporting.
+- **Customer activity historical backfill:** performs the initial historical processing required to populate the customer activity analytical dataset.
+- **Batch finalisation:** records the execution outcome and updates batch status.
+
+**Initial Data Pipeline DAG**
+
+![Initial Data Pipeline DAG](docs/resources/data_pipeline/dags/initial_data_pipeline_dag.png)
+
+
+### 3. Incremental Data Pipeline DAG
+
+This DAG handles the periodic integration of newly available and modified data from the source systems into the Data Warehouse.
+
+Unlike the initial pipeline, it processes incremental changes rather than reloading the entire historical dataset.
+
+Its workflow includes:
+
+- **Batch initialisation:** creates a new batch execution record and assigns a unique batch identifier.
+- **Watermark retrieval:** obtains the latest extraction watermarks to identify the processing boundaries.
+- **Parallel incremental extraction:** retrieves new or modified subscriptions, billings, customers, offer configurations, offers, purchases, and service usage records.
+- **Staging:** loads extracted records into the PostgreSQL staging layer while maintaining batch traceability.
+- **Data quality checks:** validates incoming records before integration.
+- **Incremental Data Warehouse loading:** applies the appropriate transformations and loading strategies, including Slowly Changing Dimension (SCD) techniques for dimension updates.
+- **Watermark update:** advances extraction watermarks following successful Data Warehouse loading.
+- **Analytics refresh:** refreshes the relevant materialised views after successful Data Warehouse loading, ensuring that reporting datasets reflect the latest integrated data.
+- **Monthly customer activity analysis:** checks whether the monthly analysis is due and triggers the processing of customer activity data when required.
+- **Batch finalisation:** records execution status and processing metadata.
+
+**Incremental Data Pipeline DAG**
+
+![Incremental Data Pipeline DAG](docs/resources/data_pipeline/dags/incremental_data_pipeline_dag.png)
+
+
+### Pipeline Reliability and Monitoring
+
+Several mechanisms were implemented to improve pipeline reliability, ensure traceability, and support recovery from failures:
+
+- **Batch tracking:** unique batch identifiers and execution metadata provide traceability across pipeline runs.
+- **Failure handling:** failed executions are recorded and handled through dedicated failure-management tasks.
+- **Automatic retries:** Airflow retries failed tasks according to their configured retry policies.
+- **Idempotency:** pipeline operations are designed to prevent duplicate data when tasks are re-executed.
+- **Recovery:** workflows support restarting failed processing without unnecessarily repeating successfully completed operations.
+
+Together, the three DAGs and the Pipeline Factory approach provide a structured and reusable orchestration framework for platform initialisation, historical data ingestion, and incremental data integration. By refreshing analytical objects after successful Data Warehouse loads and incorporating monthly customer activity analysis, the orchestration framework keeps reporting datasets up to date and supports ongoing business analysis.
+
+![Pipeline Metadata Tables Overview](docs/resources/data_pipeline/pipeline_metadata_tables_overview.png)
 
 ## Project Structure
 
