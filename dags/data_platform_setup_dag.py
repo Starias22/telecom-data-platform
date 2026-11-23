@@ -5,7 +5,7 @@ from airflow.providers.standard.operators.python import PythonOperator
 from airflow.exceptions import AirflowSkipException
 
 
-from config.config import SETUP_COMPLETED, INITIALIZED
+from config.config import SETUP_COMPLETED, INITIALIZED, DAGS_TAG
 
 from src.utils.platform_manager import setup_platform_database, get_platform_state
 from src.utils.logger import get_logger
@@ -35,6 +35,7 @@ def setup_data_platform():
 with DAG(
         dag_id="data_platform_setup",
         description="This DAG simply setup the data platform by creating all neccessary schemas and tables for cities reference, pipeline metadata, staging, data quality, and the datawarehouse",
+        tags=[DAGS_TAG],
         default_args=DEFAULT_ARGS
 
 ):
